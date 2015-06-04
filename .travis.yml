@@ -8,3 +8,4 @@ deploy:
   skip_cleanup: true
   on:
     repo: nfscan/nfscan
+    tags: true
