@@ -1,11 +1,10 @@
 language: java
-
 script: 02-Sourcecode/build.sh
-
 deploy:
   provider: releases
-  api_key: "2f182947a3140029904d326eb597b2a5c23518b648fc1fc2e3dcbc222e1e22db"
-  file: "02-Sourcecode/nfscan-server/target/nfscan-server.war"
+  api_key:
+    secure: DRaSJmPJ4R2qLF+nrM+cRjoUsLkGtDphjW4/HeON3hTEcYAF0BOqcGo+Tw9RhFNQP9j5DbPm1d9nUo3vYMcOZvrGpp2384qBfuuUadNZ641+1iY4E3KFJUsbuUQctJ8sWBQTznJ1qj/MW8OFPBcK2jL8cevGBHrCJeXRh9iaKu1DygfPwEtNNYJQcpsNKQQ7uLyGaLBB9RwWElYZtECFhDHhLA8OhVTdxXh1AlwTM0w19Txbp4Tm0nfiSLBfiW35PP1NS+sgfsETeWHbojp+zk40eHPtzpuCnUzqpT516dzfzTUpFX85rb6vqKLHGfpu8Rtv+0KqtH/jFq0axP6g94QWk7Odr+m2c01CV2hSj2Rudo1QTOx+3g+T1jYaRajzFsR8vfgvHw5CRSG68p/AE0Cc5tO5utVa00/DjxA7HzwyVOWck42glRRICnMAwFvzB8YY709V/xXMTExgWYhNOAJzdPzbBnEhX6qsH4CnZ9kNky0f/U0w8QwIQ8Ko2Ogx5URjUcB7zXgCYOhIabJTWFoij8ePYkdhAhzix8Fp2JF5HQdGWzYzXSO9Oz3JC1dCI3D5040sZnS3gpAmbk90m9wEDHvhP4811YZfdz5LBYn4hnkQpdKoqJ1WnolZn5hXX6wuB9nwe2OfCrIA00OLk1oM3geMUR8mSkvy9DfHyJw=
+  file: 02-Sourcecode/nfscan-server/target/nfscan-server.war
   skip_cleanup: true
   on:
-    tags: true
+    repo: nfscan/nfscan
