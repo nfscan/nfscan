@@ -1,0 +1,7 @@
+language: java
+
+env:
+  global:
+    - REPO="nfscan/nfscan"
+    - CI_HOME=`pwd`/$REPO
+script: 02-Sourcecode/build.sh
