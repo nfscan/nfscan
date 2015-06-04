@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:security="http://www.springframework.org/schema/security"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+          http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+          http://www.springframework.org/schema/security
+          http://www.springframework.org/schema/security/spring-security-3.1.xsd">
+
+
+    <!-- Spring Security -->
+    <security:http auto-config="true" access-denied-page="/faces/accessDenied.xhtml">
+
+        <security:intercept-url pattern="/be/index.action" access="ROLE_ADMIN,ROLE_USER" />
+        <security:intercept-url pattern="/be/taxreceipts/**" access="ROLE_ADMIN,ROLE_USER" />
+
+        <security:form-login login-processing-url="/be/j_spring_security_check" login-page="/be/login.action"
+                             default-target-url="/be/index.action"
+                             authentication-failure-url="/be/login.action?message=Usuario%20e%20ou%20Senha%20Invalidos"/>
+
+        <security:logout invalidate-session="true" logout-url="/j_spring_security_logout" logout-success-url="/be/logout.action"/>
+    </security:http>
+
+    <security:authentication-manager>
+        <security:authentication-provider>
+            <security:user-service>
+                <security:user name="admin" authorities="ROLE_ADMIN,ROLE_USER" password="admin" />
+            </security:user-service>
+        </security:authentication-provider>
+    </security:authentication-manager>
+
+    <!-- Used to access security functions on JSPs through taglibs -->
+    <bean id="webexpressionHandler" class="org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler" />
+
+</beans>
