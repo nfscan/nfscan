@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * Class in charge of generating signature and validate counterSignature to fend off request that aren't coming from
- * our app. We decided to that since the app doesn't provide neither any log in feature. Another good reason why we've
+ * Class in charge of generating signature and validate counterSignature to fend off requests that aren't coming from
+ * our app. We've decided to do that since the app doesn't provide any log in feature. Another good reason why we've
  * chosen to implement in that way is that we wanted to keep this application as stateless as possible so that we could
  * scale without have to enabled stickess sessions on the load balancer or have to deal with connection draining when
  * scaling up and down.
