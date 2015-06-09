@@ -180,7 +180,7 @@ public class TaxReceiptMobileController extends AbstractController {
 
             ocrTransactionDAO.save(ocrTransaction);
             processTaxReceiptSQSService.sendMessage(new ProcessInQueueModel(ocrTransaction.getId(), ocrTransaction.getS3Object()));
-            processTaxReceiptCloudWatchService.putMetricData(ProcessTaxReceiptCloudWatchService.OCR_PROCESS_IN_QUEUE_MESSAGES_SENT, 1.0);
+            processTaxReceiptCloudWatchService.putMetricData(processTaxReceiptCloudWatchService.getMessagesSentMetric(), 1.0);
 
             resultResponse = new ResultResponse(true);
         } catch (Exception ex) {

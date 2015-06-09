@@ -2,6 +2,7 @@ package cc.nfscan.server.service.cloudwatch;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
@@ -21,12 +22,14 @@ public class ProcessTaxReceiptCloudWatchService extends AmazonCloudWatchService 
     /**
      * Metric name for the number of messages sent to a queue
      */
-    public static final String OCR_PROCESS_IN_QUEUE_MESSAGES_SENT = "OCR-PROCESS-IN-QUEUE-MESSAGES-SENT";
+    @Value(value = "${aws.cloudwatch.ocr.process.queue.in}")
+    public String messagesSentMetric;
 
     /**
      * Metric name for the how long the OCR process took to process that image
      */
-    public static final String OCR_PROCESS_OUT_QUEUE_ELAPSED_TIME = "OCR-PROCESS-OUT-QUEUE-ELAPSED-TIME";
+    @Value(value = "${aws.cloudwatch.ocr.process.queue.elapsedtime}")
+    public String elapsedTimeToProcess;
 
     /**
      * <p>
@@ -52,5 +55,21 @@ public class ProcessTaxReceiptCloudWatchService extends AmazonCloudWatchService 
      */
     public void putMetricData(String metricName, Double metricValue) throws AmazonClientException, AmazonServiceException {
         this.putMetricData(namespace, metricName, metricValue);
+    }
+
+    public String getMessagesSentMetric() {
+        return messagesSentMetric;
+    }
+
+    public void setMessagesSentMetric(String messagesSentMetric) {
+        this.messagesSentMetric = messagesSentMetric;
+    }
+
+    public String getElapsedTimeToProcess() {
+        return elapsedTimeToProcess;
+    }
+
+    public void setElapsedTimeToProcess(String elapsedTimeToProcess) {
+        this.elapsedTimeToProcess = elapsedTimeToProcess;
     }
 }

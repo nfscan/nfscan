@@ -155,7 +155,7 @@ public class SQSConsumerListener implements MessageListener {
                 }
                 ocrTransaction.setProcessed(true);
 
-                processTaxReceiptCloudWatchService.putMetricData(ProcessTaxReceiptCloudWatchService.OCR_PROCESS_OUT_QUEUE_ELAPSED_TIME, processOutQueueModel.getElapsedTime());
+                processTaxReceiptCloudWatchService.putMetricData(processTaxReceiptCloudWatchService.getElapsedTimeToProcess(), processOutQueueModel.getElapsedTime());
 
                 ocrTransactionDAO.save(ocrTransaction);
 
