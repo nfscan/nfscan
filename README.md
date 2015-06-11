@@ -5,4 +5,4 @@ NFScan is a free, open-source software, available to non-profit organizations to
 
 ## FAQ
 
-Frequent asked questions in [Portuguese](https://github.com/nfscan/nfscan/wiki/FAQ---Português)
+Frequent asked questions in [Portuguese](http://nfscan.cc/faq.html)
