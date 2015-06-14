@@ -11,8 +11,7 @@ Frequent asked questions in [Portuguese](http://nfscan.cc/faq.html)
 
 Walkthrough in [Portuguese](https://github.com/nfscan/nfscan/wiki/Develpment-environment---%5BPortuguese%5D)
 
-Contributing 
-============
+## Contributing 
 
 You're encouraged to contribute to nfscan. Fork the code from https://github.com/nfscan/nfscan and submit pull requests.
 
