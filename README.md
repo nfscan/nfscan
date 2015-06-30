@@ -11,6 +11,10 @@ Frequent asked questions in [Portuguese](http://nfscan.cc/faq.html)
 
 Walkthrough in [Portuguese](https://github.com/nfscan/nfscan/wiki/Develpment-environment---%5BPortuguese%5D)
 
+## Public API
+
+Once you've set up your development enviroment you can make call to nfscan's public API to process or donate receipts. We've created [a wiki page](https://github.com/nfscan/nfscan/wiki/Public-API-calls-%5BPortuguese%5D) containing all requests you should use in order to integrate with whatever app/site of yours.
+
 ## Mobile
 
 We've made an open source app for [iOS](https://github.com/nfscan/ios-receipt-scan-example) that integrates with nfscan. You may use it as a reference model or even as a white label product. That's up to you.
