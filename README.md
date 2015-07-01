@@ -13,7 +13,7 @@ Walkthrough in [Portuguese](https://github.com/nfscan/nfscan/wiki/Develpment-env
 
 ## Public API
 
-Once you've set up your development enviroment you can make call to nfscan's public API to process or donate receipts. We've created [a wiki page](https://github.com/nfscan/nfscan/wiki/Public-API-calls-%5BPortuguese%5D) containing all requests you should use in order to integrate with whatever app/site of yours.
+Once you've set up your development enviroment you can make calls to nfscan's public API to process or donate receipts. We've created [a wiki page](https://github.com/nfscan/nfscan/wiki/Public-API-calls-%5BPortuguese%5D) containing all requests you should use in order to integrate with whatever app/site of yours.
 
 ## Mobile
 
