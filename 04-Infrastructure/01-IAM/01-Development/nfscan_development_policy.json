@@ -32,8 +32,8 @@
                 "sqs:SendMessage"
             ],
             "Resource": [
-                "arn:aws:sqs:sa-east-1:000000000000:DES-NFSCAN-OCR-PROCESS-IN",
-                "arn:aws:sqs:sa-east-1:000000000000:DES-NFSCAN-OCR-PROCESS-OUT"
+                "arn:aws:sqs:sa-east-1:*:DES-NFSCAN-OCR-PROCESS-IN",
+                "arn:aws:sqs:sa-east-1:*:DES-NFSCAN-OCR-PROCESS-OUT"
             ]
         },
         {
@@ -50,7 +50,7 @@
                 "dynamodb:DescribeTable"
             ],
             "Resource": [
-                "arn:aws:dynamodb:sa-east-1:000000000000:table/DES-NFSCAN-*"
+                "arn:aws:dynamodb:sa-east-1:*:table/DES-NFSCAN-*"
             ]
         },
         {
