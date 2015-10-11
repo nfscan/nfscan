@@ -22,6 +22,7 @@ We've made an open source app for [iOS](https://github.com/nfscan/ios-receipt-sc
 ## Awards
 
 ![Cannes Lions - Cyber Category](03-Documentation/02-DocAssets/award-01.jpg)
+![Clube de Criação - Estrela Verde](03-Documentation/02-DocAssets/award-02.jpg)
 
 ## Contributing 
 
