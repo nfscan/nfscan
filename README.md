@@ -21,8 +21,18 @@ We've made an open source app for [iOS](https://github.com/nfscan/ios-receipt-sc
 
 ## Awards
 
-![Cannes Lions - Cyber Category](03-Documentation/02-DocAssets/award-01.jpg)
-![Clube de Criação - Estrela Verde](03-Documentation/02-DocAssets/award-02.jpg)
+<table>
+  <tbody>
+    <tr>
+      <td><img src="https://raw.githubusercontent.com/PauloMigAlmeida/nfscan/master/03-Documentation/02-DocAssets/award-01.jpg" alt=""/></td>
+      <td><img src="https://raw.githubusercontent.com/PauloMigAlmeida/nfscan/master/03-Documentation/02-DocAssets/award-02.jpg" alt=""/></td>
+    </tr>
+    <tr>
+      <td>Cannes Lions - Cyber Category</td>
+      <td>Clube de Criação - Estrela Verde</td>
+    </tr>
+  </tbody>
+</table>
 
 ## Contributing 
 
