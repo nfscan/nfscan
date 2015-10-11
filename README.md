@@ -24,8 +24,8 @@ We've made an open source app for [iOS](https://github.com/nfscan/ios-receipt-sc
 <table>
   <tbody>
     <tr>
-      <td><img src="https://raw.githubusercontent.com/PauloMigAlmeida/nfscan/master/03-Documentation/02-DocAssets/award-01.jpg" alt=""/></td>
-      <td><img src="https://raw.githubusercontent.com/PauloMigAlmeida/nfscan/master/03-Documentation/02-DocAssets/award-02.jpg" alt=""/></td>
+      <td><img src="https://raw.githubusercontent.com/nfscan/nfscan/master/03-Documentation/02-DocAssets/award-01.jpg" alt=""/></td>
+      <td><img src="https://raw.githubusercontent.com/nfscan/nfscan/master/03-Documentation/02-DocAssets/award-02.jpg" alt=""/></td>
     </tr>
     <tr align="center">
       <td>[Bronze] :: Cannes Lions - Cyber Category</td>
