@@ -19,6 +19,21 @@ Once you've set up your development enviroment you can make calls to nfscan's pu
 
 We've made an open source app for [iOS](https://github.com/nfscan/ios-receipt-scan-example) that integrates with nfscan. You may use it as a reference model or even as a white label product. That's up to you.
 
+## Awards
+
+<table>
+  <tbody>
+    <tr>
+      <td><img src="https://raw.githubusercontent.com/nfscan/nfscan/master/03-Documentation/02-DocAssets/award-01.jpg" alt=""/></td>
+      <td><img src="https://raw.githubusercontent.com/nfscan/nfscan/master/03-Documentation/02-DocAssets/award-02.jpg" alt=""/></td>
+    </tr>
+    <tr align="center">
+      <td>[Bronze] :: Cannes Lions - Cyber Category</td>
+      <td>[Estrela Verde] :: CCSP - Ação beneficiente</td>
+    </tr>
+  </tbody>
+</table>
+
 ## Contributing 
 
 You're encouraged to contribute to nfscan. Fork the code from https://github.com/nfscan/nfscan and submit pull requests.
