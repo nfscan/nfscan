@@ -13,7 +13,7 @@
     <!-- Amazon Simple Queue Service-->
     <bean id="amazonSQSClient" class="com.amazonaws.services.sqs.AmazonSQSClient">
         <constructor-arg index="0" ref="BasicAWSCredentials" />
-        <property name="endpoint" value="https://sqs.sa-east-1.amazonaws.com"  />
+        <property name="endpoint" value="https://sqs.${aws.region}.amazonaws.com"  />
     </bean>
 
     <bean id="amazonSQSMessagingClientWrapper" class="com.amazon.sqs.javamessaging.AmazonSQSMessagingClientWrapper">
@@ -28,7 +28,7 @@
     <!-- Amazon CloudWatch -->
     <bean id="amazonCloudWatchClient" class="com.amazonaws.services.cloudwatch.AmazonCloudWatchClient">
         <constructor-arg index="0" ref="BasicAWSCredentials" />
-        <property name="endpoint" value="https://monitoring.sa-east-1.amazonaws.com"  />
+        <property name="endpoint" value="https://monitoring.${aws.region}.amazonaws.com"  />
     </bean>
 
     <!-- Amazon DynamoDB-->
@@ -43,7 +43,7 @@
 
     <bean id="amazonDynamoDBClient" class="com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient">
         <constructor-arg index="0" ref="BasicAWSCredentials" />
-        <property name="endpoint" value="http://dynamodb.sa-east-1.amazonaws.com" />
+        <property name="endpoint" value="http://dynamodb.${aws.region}.amazonaws.com" />
     </bean>
 
     <bean id="dynamoDBMapper" class="com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper">
