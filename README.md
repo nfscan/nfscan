@@ -29,7 +29,7 @@ We've made an open source app for [iOS](https://github.com/nfscan/ios-receipt-sc
     </tr>
     <tr align="center">
       <td>[Bronze] :: Cannes Lions - Cyber Category</td>
-      <td>[Estrela Verde] :: CCSP - Ação beneficiente</td>
+      <td>[Estrela Verde] :: CCSP - Ação beneficente</td>
     </tr>
   </tbody>
 </table>
