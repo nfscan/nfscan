@@ -26,10 +26,12 @@ We've made an open source app for [iOS](https://github.com/nfscan/ios-receipt-sc
     <tr>
       <td><img src="https://raw.githubusercontent.com/nfscan/nfscan/master/03-Documentation/02-DocAssets/award-01.jpg" alt=""/></td>
       <td><img src="https://raw.githubusercontent.com/nfscan/nfscan/master/03-Documentation/02-DocAssets/award-02.jpg" alt=""/></td>
+      <td><img src="https://raw.githubusercontent.com/nfscan/nfscan/master/03-Documentation/02-DocAssets/award-03.jpg" alt=""/></td>
     </tr>
     <tr align="center">
       <td>[Bronze] :: Cannes Lions - Cyber Category</td>
       <td>[Estrela Verde] :: CCSP - Ação beneficiente</td>
+      <td>[Grand Prix] :: B9 2015 </td>
     </tr>
   </tbody>
 </table>
