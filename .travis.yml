@@ -1,5 +1,5 @@
 language: java
-script: 02-Sourcecode/build.sh
+script: 02-Sourcecode/scripts/build.sh
 deploy:
   provider: releases
   api_key:
@@ -9,3 +9,6 @@ deploy:
   on:
     repo: nfscan/nfscan
     tags: true
+addons:
+  hosts:
+    - dynamodb-local

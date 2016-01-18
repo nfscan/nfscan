@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+          http://www.springframework.org/schema/beans/spring-beans-3.1.xsd">
+
+    <!-- Amazon Credentials -->
+    <bean id="BasicAWSCredentials" class="com.amazonaws.auth.BasicAWSCredentials">
+        <constructor-arg index="0" value="${aws.access.key}" />
+        <constructor-arg index="1" value="${aws.secret.key}" />
+    </bean>
+
+    <!-- Amazon Simple Queue Service-->
+    <bean id="amazonSQSClient" class="com.amazonaws.services.sqs.AmazonSQSClient">
+        <constructor-arg index="0" ref="BasicAWSCredentials" />
+        <property name="endpoint" value="https://sqs.${aws.region}.amazonaws.com"  />
+    </bean>
+
+    <bean id="amazonSQSMessagingClientWrapper" class="com.amazon.sqs.javamessaging.AmazonSQSMessagingClientWrapper">
+        <constructor-arg index="0" ref="amazonSQSClient" />
+    </bean>
+
+    <bean id="sqsConnection" class="com.amazon.sqs.javamessaging.SQSConnection">
+        <constructor-arg index="0" ref="amazonSQSMessagingClientWrapper" />
+        <constructor-arg index="1" value="10" />
+    </bean>
+
+    <!-- Amazon CloudWatch -->
+    <bean id="amazonCloudWatchClient" class="com.amazonaws.services.cloudwatch.AmazonCloudWatchClient">
+        <constructor-arg index="0" ref="BasicAWSCredentials" />
+        <property name="endpoint" value="https://monitoring.${aws.region}.amazonaws.com"  />
+    </bean>
+
+    <!-- Amazon DynamoDB-->
+    <bean id="tableNameOverride" class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+        <property name="staticMethod" value="com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig.TableNameOverride.withTableNamePrefix"/>
+        <property name="arguments" value="${aws.dynamodb.tableprefix}" />
+    </bean>
+
+    <bean id="dynamoDBMapperConfig" class="com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig">
+        <constructor-arg index="0" ref="tableNameOverride" />
+    </bean>
+
+    <bean id="amazonDynamoDBClient" class="com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient">
+        <constructor-arg index="0" ref="BasicAWSCredentials" />
+        <property name="endpoint" value="http://localhost:8000" />
+    </bean>
+
+    <bean id="dynamoDBMapper" class="com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper">
+        <constructor-arg index="0" ref="amazonDynamoDBClient" />
+        <constructor-arg index="1" ref="dynamoDBMapperConfig" />
+    </bean>
+
+</beans>

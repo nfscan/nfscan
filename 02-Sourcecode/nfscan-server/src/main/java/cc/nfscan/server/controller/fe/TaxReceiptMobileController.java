@@ -35,6 +35,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.UUID;
 
+import static cc.nfscan.server.utils.StringUtils.removeNonNumeric;
+
 /**
  * Controller in charge of handling TaxReceipt related requests on frontend interface
  *
@@ -147,7 +149,7 @@ public class TaxReceiptMobileController extends AbstractController {
             ex.printStackTrace();
             resultResponse = new ResultResponse(false);
         }
-        return new ResponseEntity<String>(gson.toJson(resultResponse), responseHeaders, HttpStatus.OK);
+        return new ResponseEntity<>(gson.toJson(resultResponse), responseHeaders, HttpStatus.OK);
     }
 
     /**
@@ -187,7 +189,7 @@ public class TaxReceiptMobileController extends AbstractController {
             ex.printStackTrace();
             resultResponse = new ResultResponse(false);
         }
-        return new ResponseEntity<String>(gson.toJson(resultResponse), responseHeaders, HttpStatus.OK);
+        return new ResponseEntity<>(gson.toJson(resultResponse), responseHeaders, HttpStatus.OK);
     }
 
 
@@ -216,7 +218,7 @@ public class TaxReceiptMobileController extends AbstractController {
             resultResponse = new ResultResponse(false);
         }
 
-        return new ResponseEntity<String>(gson.toJson(resultResponse), responseHeaders, HttpStatus.OK);
+        return new ResponseEntity<>(gson.toJson(resultResponse), responseHeaders, HttpStatus.OK);
     }
 
 
@@ -233,7 +235,7 @@ public class TaxReceiptMobileController extends AbstractController {
      * @see <a href="http://en.wikipedia.org/wiki/CNPJ">http://en.wikipedia.org/wiki/CNPJ</a>
      */
     @RequestMapping(value = "/fe/taxreceipts/process/donate")
-    public ResponseEntity<String> donate(
+    public ResponseEntity<String> processDonate(
             @RequestParam(value = "cnpj") String cnpj
             , @RequestParam(value = "date") Date date
             , @RequestParam(value = "coo") String coo
@@ -274,7 +276,55 @@ public class TaxReceiptMobileController extends AbstractController {
             resultResponse = new ResultResponse(false);
         }
 
-        return new ResponseEntity<String>(gson.toJson(resultResponse), responseHeaders, HttpStatus.OK);
+        return new ResponseEntity<>(gson.toJson(resultResponse), responseHeaders, HttpStatus.OK);
+    }
+
+    /**
+     * Donates the tax receipt without the user submit a picture of receipt.
+     *
+     * @param cnpj          a valid National Registry of Legal Entities
+     * @param date          a date in the form dd/MM/yyyy
+     * @param coo           a valid COO (Operation Counter)
+     * @param total         a total value of the receipt
+     * @return a JSON containing the ResultResponse properties
+     * @see ResultResponse
+     * @see <a href="http://en.wikipedia.org/wiki/CNPJ">http://en.wikipedia.org/wiki/CNPJ</a>
+     */
+    @RequestMapping(value = "/fe/taxreceipts/manual/donate")
+    public ResponseEntity<String> manualDonate(
+            @RequestParam(value = "cnpj") String cnpj
+            , @RequestParam(value = "date") Date date
+            , @RequestParam(value = "coo") String coo
+            , @RequestParam(value = "total") double total) {
+
+        HttpHeaders responseHeaders = super.createBasicHttpHeaderResponse(APPLICATION_JSON);
+        Gson gson = new Gson();
+        ResultResponse resultResponse;
+
+        try {
+
+            Assert.isTrue(StringUtils.validateCNPJ(cnpj));
+            Assert.notNull(coo);
+            Assert.isTrue(StringUtils.isNumeric(coo));
+            Assert.isTrue(total > 0);
+
+            //Save to database
+            TaxReceipt taxReceipt = new TaxReceipt();
+            taxReceipt.setCnpj(removeNonNumeric(cnpj));
+            taxReceipt.setDate(date);
+            taxReceipt.setCoo(coo);
+            taxReceipt.setTotal(total);
+            taxReceipt.setDateInsertion(new Date());
+
+            taxReceiptDAO.save(taxReceipt);
+            resultResponse = new ResultResponse(true);
+
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            resultResponse = new ResultResponse(false);
+        }
+
+        return new ResponseEntity<>(gson.toJson(resultResponse), responseHeaders, HttpStatus.OK);
     }
 
 }

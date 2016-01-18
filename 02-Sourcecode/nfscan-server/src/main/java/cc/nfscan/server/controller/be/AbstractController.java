@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.InitBinder;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import static cc.nfscan.server.utils.Constants.DATE_FORMAT;
 
 /**
  * Base controller for backend objects using Spring MVC.
@@ -28,7 +29,6 @@ public abstract class AbstractController {
     protected static final String APPLICATION_JSON = "application/json; charset=utf-8";
 
 
-
     /**
      * Initiates the data binding from web request parameters to JavaBeans objects
      *
@@ -36,7 +36,7 @@ public abstract class AbstractController {
      */
     @InitBinder
     public void initBinder(WebDataBinder webDataBinder) {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+        SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
         dateFormat.setLenient(true);
         webDataBinder.registerCustomEditor(Date.class, new CustomDateEditor(dateFormat, true));
     }
