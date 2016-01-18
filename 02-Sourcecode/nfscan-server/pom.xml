@@ -79,8 +79,8 @@
         <org.springframework.version>4.2.3.RELEASE</org.springframework.version>
         <org.springframework.security.version>4.0.3.RELEASE</org.springframework.security.version>
         <com.amazonaws.version>1.9.22</com.amazonaws.version>
-        <configuration.source>1.8</configuration.source>
-        <configuration.target>1.8</configuration.target>
+        <configuration.source>1.7</configuration.source>
+        <configuration.target>1.7</configuration.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>

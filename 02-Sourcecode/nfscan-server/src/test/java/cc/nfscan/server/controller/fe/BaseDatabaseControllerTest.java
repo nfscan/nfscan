@@ -54,9 +54,11 @@ class BaseDatabaseControllerTest extends BaseControllerTest {
         for (Method method : domain.getMethods()) {
             if(method.isAnnotationPresent(DynamoDBIndexHashKey.class)){
                 String tempGSI = method.getAnnotation(DynamoDBIndexHashKey.class).globalSecondaryIndexName();
-                tableRequest.getGlobalSecondaryIndexes().stream().filter(globalSecondaryIndex -> globalSecondaryIndex.getIndexName().equals(tempGSI)).forEach(globalSecondaryIndex -> {
-                    globalSecondaryIndex.setProvisionedThroughput(new ProvisionedThroughput(5L, 5L));
-                });
+                for (GlobalSecondaryIndex globalSecondaryIndex : tableRequest.getGlobalSecondaryIndexes()) {
+                    if(globalSecondaryIndex.getIndexName().equals(tempGSI)){
+                        globalSecondaryIndex.setProvisionedThroughput(new ProvisionedThroughput(5L,5L));
+                    }
+                }
             }
         }
 
