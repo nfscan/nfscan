@@ -7,7 +7,7 @@
     <groupId>cc.nfscan</groupId>
     <artifactId>nfscan-server</artifactId>
     <packaging>war</packaging>
-    <version>1.0</version>
+    <version>1.1</version>
     <name>nfscan</name>
 
     <organization>
@@ -76,7 +76,9 @@
     </developers>
 
     <properties>
-        <org.springframework.version>3.1.1.RELEASE</org.springframework.version>
+        <org.springframework.version>4.2.3.RELEASE</org.springframework.version>
+        <org.springframework.security.version>4.0.3.RELEASE</org.springframework.security.version>
+        <com.amazonaws.version>1.9.22</com.amazonaws.version>
         <configuration.source>1.7</configuration.source>
         <configuration.target>1.7</configuration.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -130,22 +132,22 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-core</artifactId>
-            <version>${org.springframework.version}</version>
+            <version>${org.springframework.security.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-web</artifactId>
-            <version>${org.springframework.version}</version>
+            <version>${org.springframework.security.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-config</artifactId>
-            <version>${org.springframework.version}</version>
+            <version>${org.springframework.security.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-taglibs</artifactId>
-            <version>${org.springframework.version}</version>
+            <version>${org.springframework.security.version}</version>
         </dependency>
 
         <!-- JSTL -->
@@ -175,8 +177,14 @@
         <!-- Amazon Sdk  -->
         <dependency>
             <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk</artifactId>
-            <version>1.9.22</version>
+            <artifactId>aws-java-sdk-dynamodb</artifactId>
+            <version>${com.amazonaws.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-cloudwatch</artifactId>
+            <version>${com.amazonaws.version}</version>
         </dependency>
 
         <!-- AWS SQS as JMS 1.1 specification -->
@@ -240,25 +248,6 @@
                             <charset>UTF-8</charset>
                             <uriEncoding>UTF-8</uriEncoding>
                         </configuration>
-                        <executions>
-                            <execution>
-                                <id>tomcat-run</id>
-                                <goals>
-                                    <goal>run-war-only</goal>
-                                </goals>
-                                <phase>pre-integration-test</phase>
-                                <configuration>
-                                    <fork>true</fork>
-                                </configuration>
-                            </execution>
-                            <execution>
-                                <id>tomcat-shutdown</id>
-                                <goals>
-                                    <goal>shutdown</goal>
-                                </goals>
-                                <phase>post-integration-test</phase>
-                            </execution>
-                        </executions>
                     </plugin>
                 </plugins>
             </build>
@@ -313,36 +302,6 @@
                         </configuration>
                         <goals>
                             <goal>run</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.12.4</version>
-                <configuration>
-                    <excludes>
-                        <exclude>**/*IntegrationTest*</exclude>
-                    </excludes>
-                </configuration>
-            </plugin>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>2.12.4</version>
-                <configuration>
-                    <includes>
-                        <include>**/*IntegrationTest*</include>
-                    </includes>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>integration-test</goal>
-                            <goal>verify</goal>
                         </goals>
                     </execution>
                 </executions>
