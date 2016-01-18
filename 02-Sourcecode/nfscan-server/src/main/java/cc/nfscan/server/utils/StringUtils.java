@@ -1,8 +1,12 @@
 package cc.nfscan.server.utils;
 
+import org.springframework.util.Assert;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.DateTimeException;
-import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.InputMismatchException;
 
 /**
@@ -108,12 +112,14 @@ public class StringUtils {
 
     /**
      * Validates whether of not electronic tax receipt's access keys are valid
+     *
      * @param accessKey a string containing a access key
      * @return true if valid false otherwise
      */
     public static boolean validateElectronicTaxReceiptAccessKey(String accessKey) {
         boolean ret = true;
         accessKey = removeNonNumeric(accessKey);
+        DateFormat df = new SimpleDateFormat("yyMM");
 
         // Validate length
         if (accessKey.length() != 44)
@@ -129,8 +135,11 @@ public class StringUtils {
 
         // Validate date
         try {
-            LocalDate.of(Integer.parseInt(accessKey.substring(2, 4)), Integer.parseInt(accessKey.substring(4, 6)), LocalDate.now().getDayOfMonth());
-        } catch (DateTimeException e) {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setLenient(false);
+            calendar.setTime(df.parse(accessKey.substring(2, 6)));
+            Assert.isTrue(calendar.get(Calendar.MONTH) == Integer.parseInt(accessKey.substring(4, 6)) - 1);
+        } catch (Exception e) {
             ret = false;
         }
 
@@ -143,6 +152,7 @@ public class StringUtils {
 
     /**
      * Removes non numeric characters from string
+     *
      * @param text a string you want to remove characters from
      * @return a string
      */
