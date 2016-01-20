@@ -66,6 +66,15 @@ class BaseDatabaseControllerTest extends BaseControllerTest {
     }
 
     protected void clean(){
+        /*
+            I had to hardcode the DES- prefix due to the fact that DynamoDBMapper doesn't currently have a 
+            generateDeleteTableRequest which takes into account the TableNameOverride settings. I've submited 
+            a PR to aws-sdk-java repository. 
+            
+            https://github.com/aws/aws-sdk-java/pull/606#issuecomment-172940752
+            
+            As soon as it gets merged I'll remove it
+        */
         String prefix = "DES-";
         amazonDynamoDBClient.deleteTable(new DeleteTableRequest(prefix.concat(extractTableName(OCRTransaction.class))));
         amazonDynamoDBClient.deleteTable(new DeleteTableRequest(prefix.concat(extractTableName(TaxReceipt.class))));
