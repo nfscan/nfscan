@@ -1,0 +1,289 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Create the required network layer for nfscan project",
+  "Mappings": {
+    "SubnetConfig": {
+      "VPC": {
+        "CIDR": "10.0.0.0/16"
+      },
+      "WebTierSubnet1": {
+        "CIDR": "10.0.0.0/24"
+      },
+      "WebTierSubnet2": {
+        "CIDR": "10.0.1.0/24"
+      },
+      "WorkerTierSubnet1": {
+        "CIDR": "10.0.2.0/24"
+      },
+      "WorkerTierSubnet2": {
+        "CIDR": "10.0.3.0/24"
+      }
+    },
+  },
+  "Resources": {
+    "VPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "VPC",
+            "CIDR"
+          ]
+        },
+        "EnableDnsSupport": "true",
+        "EnableDnsHostnames": "true",
+        "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "nfscan"
+          }
+        ]
+      }
+    },
+    "WebTierSubnet1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "WebTierSubnet1",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone" : {
+          "Fn::Select" : [ "0", { "Fn::GetAZs" : "" } ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Web-tier :: Public Subnet 1"
+          }
+        ]
+      }
+    },
+    "WebTierSubnet2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "WebTierSubnet2",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone" : {
+          "Fn::Select" : [ "1", { "Fn::GetAZs" : "" } ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Web-tier :: Public Subnet 2"
+          }
+        ]
+      }
+    },
+    "WorkerTierSubnet1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "WorkerTierSubnet1",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone" : {
+          "Fn::Select" : [ "0", { "Fn::GetAZs" : "" } ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Worker-tier :: Public Subnet 1"
+          }
+        ]
+      }
+    },
+    "WorkerTierSubnet2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "WorkerTierSubnet2",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone" : {
+          "Fn::Select" : [ "1", { "Fn::GetAZs" : "" } ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Worker-tier :: Public Subnet 2"
+          }
+        ]
+      }
+    },
+    "InternetGateway": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "nfscan"
+          }
+        ]
+      }
+    },
+    "GatewayToInternet": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "InternetGatewayId": {
+          "Ref": "InternetGateway"
+        }
+      }
+    },
+    "PublicRouteTable": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "nfscan"
+          }
+        ]
+      }
+    },
+    "PublicRoute": {
+      "Type": "AWS::EC2::Route",
+      "DependsOn": "GatewayToInternet",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "InternetGateway"
+        }
+      }
+    },
+    "WebTierSubnet1RouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "WebTierSubnet1"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        }
+      }
+    },
+    "WebTierSubnet2RouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "WebTierSubnet2"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        }
+      }
+    },
+    "WorkerTierSubnet1RouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "WorkerTierSubnet1"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        }
+      }
+    },
+    "WorkerTierSubnet2RouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "WorkerTierSubnet2"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        }
+      }
+    },
+    "PublicLoadBalancerSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Public ELB Security Group with HTTP access on port 80 from the internet",
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "SecurityGroupEgress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ]
+      }
+    },
+    "WebTierSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Web-tier Security Group with HTTP access on port 8080 from the ELB",
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "8080",
+            "ToPort": "8080",
+            "SourceSecurityGroupId": { "Ref": "PublicLoadBalancerSecurityGroup" }
+          }
+        ],
+        "SecurityGroupEgress": []
+      }
+    },
+    "WorkerTierSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Worker-tier Security Group with no access to the other instances",
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "SecurityGroupIngress": [],
+        "SecurityGroupEgress": []
+      }
+    }
+  }
+}
