@@ -18,7 +18,7 @@
       "WorkerTierSubnet2": {
         "CIDR": "10.0.3.0/24"
       }
-    },
+    }
   },
   "Resources": {
     "VPC": {
@@ -284,6 +284,241 @@
         "SecurityGroupIngress": [],
         "SecurityGroupEgress": []
       }
+    },
+    "S3TaxReceiptsBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "nfscan"
+          }
+        ]
+      }
+    },
+    "SQSOcrProcessIn":{
+        "Type" : "AWS::SQS::Queue",
+        "Properties" : {
+          "DelaySeconds": 0,
+          "MaximumMessageSize": 262144,
+          "MessageRetentionPeriod": 345600,
+          "QueueName": "PROD-NFSCAN-OCR-PROCESS-IN",
+          "ReceiveMessageWaitTimeSeconds": 0,
+          "VisibilityTimeout": 30
+        }
+    },
+    "SQSOcrProcessOut":{
+      "Type" : "AWS::SQS::Queue",
+      "Properties" : {
+        "DelaySeconds": 0,
+        "MaximumMessageSize": 262144,
+        "MessageRetentionPeriod": 345600,
+        "QueueName": "PROD-NFSCAN-OCR-PROCESS-OUT",
+        "ReceiveMessageWaitTimeSeconds": 0,
+        "VisibilityTimeout": 30
+      }
+    },
+    "DynamoDBOcrTransaction":{
+      "Type" : "AWS::DynamoDB::Table",
+      "Properties" : {
+        "AttributeDefinitions" : [
+          {
+            "AttributeName" : "transaction_id",
+            "AttributeType" : "S"
+          }
+        ],
+        "KeySchema" : [
+          {
+            "AttributeName" : "transaction_id",
+            "KeyType" : "HASH"
+          }
+        ],
+        "ProvisionedThroughput" : {
+          "ReadCapacityUnits" : "1",
+          "WriteCapacityUnits" : "1"
+        },
+        "TableName" : "PROD-NFSCAN-OCRTRANSACTION"
+      }
+    },
+    "DynamoDBTaxReceipt":{
+      "Type" : "AWS::DynamoDB::Table",
+      "Properties" : {
+        "AttributeDefinitions" : [
+          {
+            "AttributeName" : "taxreceipt_id",
+            "AttributeType" : "S"
+          }
+        ],
+        "KeySchema" : [
+          {
+            "AttributeName" : "taxreceipt_id",
+            "KeyType" : "HASH"
+          }
+        ],
+        "ProvisionedThroughput" : {
+          "ReadCapacityUnits" : "1",
+          "WriteCapacityUnits" : "1"
+        },
+        "TableName" : "PROD-NFSCAN-TAXRECEIPT"
+      }
+    },
+    "DynamoDBTaxReceiptArchive":{
+      "Type" : "AWS::DynamoDB::Table",
+      "Properties" : {
+        "AttributeDefinitions" : [
+          {
+            "AttributeName" : "taxreceiptarchive_id",
+            "AttributeType" : "S"
+          }
+        ],
+        "KeySchema" : [
+          {
+            "AttributeName" : "taxreceiptarchive_id",
+            "KeyType" : "HASH"
+          }
+        ],
+        "ProvisionedThroughput" : {
+          "ReadCapacityUnits" : "1",
+          "WriteCapacityUnits" : "1"
+        },
+        "TableName" : "PROD-NFSCAN-TAXRECEIPTARCHIVE"
+      }
+    },
+    "NfScanRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement": [ {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": [ "ec2.amazonaws.com" ]
+            },
+            "Action": [ "sts:AssumeRole" ]
+          } ]
+        },
+        "Path": "/",
+        "Policies": [ {
+          "PolicyName": "nfscan_policy",
+          "PolicyDocument": {
+            "Version" : "2012-10-17",
+            "Statement": [
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "s3:ListBucket"
+                ],
+                "Resource": [
+                  {
+                    "Fn::Sub" : "arn:aws:s3:::${S3TaxReceiptsBucket}"
+                  }
+                ]
+              },
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "s3:PutObject",
+                  "s3:GetObject",
+                  "s3:DeleteObject",
+                  "s3:PutObjectAcl"
+                ],
+                "Resource": [
+                  {
+                    "Fn::Sub" : "arn:aws:s3:::${S3TaxReceiptsBucket}/*"
+                  }
+                ]
+              },
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "sqs:DeleteMessage",
+                  "sqs:GetQueueAttributes",
+                  "sqs:GetQueueUrl",
+                  "sqs:ReceiveMessage",
+                  "sqs:SendMessage"
+                ],
+                "Resource": [
+                  {
+                    "Fn::Sub" : "${SQSOcrProcessIn.Arn}"
+                  },
+                  {
+                    "Fn::Sub" : "${SQSOcrProcessOut.Arn}"
+                  }
+                ]
+              },
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "dynamodb:BatchGetItem",
+                  "dynamodb:BatchWriteItem",
+                  "dynamodb:DeleteItem",
+                  "dynamodb:GetItem",
+                  "dynamodb:PutItem",
+                  "dynamodb:Query",
+                  "dynamodb:Scan",
+                  "dynamodb:UpdateItem",
+                  "dynamodb:DescribeTable"
+                ],
+                "Resource": [
+                  {
+                    "Fn::Sub" : "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBOcrTransaction}"
+                  },
+                  {
+                    "Fn::Sub" : "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTaxReceipt}"
+                  },
+                  {
+                    "Fn::Sub" : "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTaxReceiptArchive}"
+                  }
+                ]
+              },
+              {
+                "Effect": "Allow",
+                "Action": [
+                  "cloudwatch:PutMetricData"
+                ],
+                "Resource": [
+                  "*"
+                ]
+              }
+            ]
+          }
+        } ]
+      }
+    },
+    "InstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [ {
+          "Ref": "NfScanRole"
+        } ]
+      }
+    },
+    "ElasticLoadBalancer" : {
+      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties" : {
+        "Subnets" : [{ "Ref": "WebTierSubnet1" },{ "Ref": "WebTierSubnet2" }],
+        "CrossZone" : true,
+        "SecurityGroups": [{ "Ref": "PublicLoadBalancerSecurityGroup" }],
+        "Listeners" : [ {
+          "LoadBalancerPort" : "80",
+          "InstancePort" : "8080",
+          "Protocol" : "HTTP"
+        } ],
+        "HealthCheck" : {
+          "Target" : "HTTP:8080/",
+          "HealthyThreshold" : "3",
+          "UnhealthyThreshold" : "5",
+          "Interval" : "30",
+          "Timeout" : "5"
+        }
+      }
+    }
+  },
+  "Outputs" : {
+    "BackendUrl" : {
+      "Description" : "Backend url that you'll use in the mobile app",
+      "Value" : { "Fn::GetAtt" : [ "ElasticLoadBalancer", "DNSName" ]}
     }
   }
 }
