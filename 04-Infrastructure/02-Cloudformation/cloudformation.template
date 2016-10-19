@@ -246,14 +246,7 @@
             "CidrIp": "0.0.0.0/0"
           }
         ],
-        "SecurityGroupEgress": [
-          {
-            "IpProtocol": "tcp",
-            "FromPort": "80",
-            "ToPort": "80",
-            "CidrIp": "0.0.0.0/0"
-          }
-        ]
+        "SecurityGroupEgress": []
       }
     },
     "WebTierSecurityGroup": {
@@ -384,6 +377,103 @@
         "TableName" : "PROD-NFSCAN-TAXRECEIPTARCHIVE"
       }
     },
+    "NFScanPolicy": {
+      "Type" : "AWS::IAM::ManagedPolicy",
+      "Properties" : {
+        "Description": "nfscan_policy",
+        "PolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:ListBucket"
+              ],
+              "Resource": [
+                {
+                  "Fn::Sub" : "arn:aws:s3:::${S3TaxReceiptsBucket}"
+                }
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:DeleteObject",
+                "s3:PutObjectAcl"
+              ],
+              "Resource": [
+                {
+                  "Fn::Sub" : "arn:aws:s3:::${S3TaxReceiptsBucket}/*"
+                }
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+                "sqs:ReceiveMessage",
+                "sqs:SendMessage"
+              ],
+              "Resource": [
+                {
+                  "Fn::Sub" : "${SQSOcrProcessIn.Arn}"
+                },
+                {
+                  "Fn::Sub" : "${SQSOcrProcessOut.Arn}"
+                }
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:Query",
+                "dynamodb:Scan",
+                "dynamodb:UpdateItem",
+                "dynamodb:DescribeTable"
+              ],
+              "Resource": [
+                {
+                  "Fn::Sub" : "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBOcrTransaction}"
+                },
+                {
+                  "Fn::Sub" : "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTaxReceipt}"
+                },
+                {
+                  "Fn::Sub" : "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTaxReceiptArchive}"
+                }
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "cloudwatch:PutMetricData"
+              ],
+              "Resource": [
+                "*"
+              ]
+            }
+          ]
+        }
+      },
+      "DependsOn": ["DynamoDBOcrTransaction","DynamoDBTaxReceiptArchive","DynamoDBTaxReceipt","S3TaxReceiptsBucket", "SQSOcrProcessIn", "SQSOcrProcessOut"]
+    },
+    "NFScanUser":{
+      "Type": "AWS::IAM::User",
+      "Properties": {
+        "Path": "/",
+        "ManagedPolicyArns": [{ "Ref": "NFScanPolicy" }]
+      },
+      "DependsOn": [ "NFScanPolicy"]
+    },
     "NfScanRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
@@ -397,93 +487,9 @@
             "Action": [ "sts:AssumeRole" ]
           } ]
         },
-        "Path": "/",
-        "Policies": [ {
-          "PolicyName": "nfscan_policy",
-          "PolicyDocument": {
-            "Version" : "2012-10-17",
-            "Statement": [
-              {
-                "Effect": "Allow",
-                "Action": [
-                  "s3:ListBucket"
-                ],
-                "Resource": [
-                  {
-                    "Fn::Sub" : "arn:aws:s3:::${S3TaxReceiptsBucket}"
-                  }
-                ]
-              },
-              {
-                "Effect": "Allow",
-                "Action": [
-                  "s3:PutObject",
-                  "s3:GetObject",
-                  "s3:DeleteObject",
-                  "s3:PutObjectAcl"
-                ],
-                "Resource": [
-                  {
-                    "Fn::Sub" : "arn:aws:s3:::${S3TaxReceiptsBucket}/*"
-                  }
-                ]
-              },
-              {
-                "Effect": "Allow",
-                "Action": [
-                  "sqs:DeleteMessage",
-                  "sqs:GetQueueAttributes",
-                  "sqs:GetQueueUrl",
-                  "sqs:ReceiveMessage",
-                  "sqs:SendMessage"
-                ],
-                "Resource": [
-                  {
-                    "Fn::Sub" : "${SQSOcrProcessIn.Arn}"
-                  },
-                  {
-                    "Fn::Sub" : "${SQSOcrProcessOut.Arn}"
-                  }
-                ]
-              },
-              {
-                "Effect": "Allow",
-                "Action": [
-                  "dynamodb:BatchGetItem",
-                  "dynamodb:BatchWriteItem",
-                  "dynamodb:DeleteItem",
-                  "dynamodb:GetItem",
-                  "dynamodb:PutItem",
-                  "dynamodb:Query",
-                  "dynamodb:Scan",
-                  "dynamodb:UpdateItem",
-                  "dynamodb:DescribeTable"
-                ],
-                "Resource": [
-                  {
-                    "Fn::Sub" : "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBOcrTransaction}"
-                  },
-                  {
-                    "Fn::Sub" : "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTaxReceipt}"
-                  },
-                  {
-                    "Fn::Sub" : "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTaxReceiptArchive}"
-                  }
-                ]
-              },
-              {
-                "Effect": "Allow",
-                "Action": [
-                  "cloudwatch:PutMetricData"
-                ],
-                "Resource": [
-                  "*"
-                ]
-              }
-            ]
-          }
-        } ]
-      }
+        "ManagedPolicyArns": [{ "Ref": "NFScanPolicy" }]
+      },
+      "DependsOn": [ "NFScanPolicy", "NFScanUser"]
     },
     "InstanceProfile": {
       "Type": "AWS::IAM::InstanceProfile",
@@ -492,6 +498,14 @@
         "Roles": [ {
           "Ref": "NfScanRole"
         } ]
+      },
+      "DependsOn": ["NfScanRole"]
+    },
+    "NFScanUserAccessKey":{
+      "Type": "AWS::IAM::AccessKey",
+      "Properties": {
+        "Serial": 1,
+        "UserName": { "Ref": "NFScanUser" }
       }
     },
     "ElasticLoadBalancer" : {
