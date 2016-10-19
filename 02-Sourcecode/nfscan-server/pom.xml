@@ -7,7 +7,7 @@
     <groupId>cc.nfscan</groupId>
     <artifactId>nfscan-server</artifactId>
     <packaging>war</packaging>
-    <version>1.1</version>
+    <version>1.2</version>
     <name>nfscan</name>
 
     <organization>
@@ -297,6 +297,8 @@
                                       file="resources/env-properties/log4j-${target.env}.properties"/>
                                 <copy overwrite="true" tofile="src/main/resources/application-prop.properties"
                                       file="resources/env-properties/application-prop-${target.env}.properties"/>
+                                <copy overwrite="true" tofile="src/main/resources/springconfiguration/aws-credentials.xml"
+                                      file="resources/env-properties/aws-credentials-${target.env}.xml"/>
 
                             </tasks>
                         </configuration>
