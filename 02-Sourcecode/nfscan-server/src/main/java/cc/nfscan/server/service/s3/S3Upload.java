@@ -2,9 +2,7 @@ package cc.nfscan.server.service.s3;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,10 +18,10 @@ import java.io.File;
 abstract class S3Upload {
 
     /**
-     * BasicAWSCredentials instance
+     * AmazonS3 instance
      */
     @Autowired
-    private BasicAWSCredentials awsCredentials;
+    private AmazonS3 amazonS3;
 
     /**
      * Uploads a new object to the specified Amazon S3 bucket.
@@ -38,12 +36,11 @@ abstract class S3Upload {
      *                                request.
      */
     protected void startUpload(String bucketName, String key, File file, boolean willBePublic) throws AmazonClientException, AmazonServiceException {
-        AmazonS3 s3 = new AmazonS3Client(awsCredentials);
         PutObjectRequest putObj = new PutObjectRequest(bucketName, key, file);
         if (willBePublic) {
             putObj.setCannedAcl(CannedAccessControlList.PublicRead);
         }
-        s3.putObject(putObj);
+        amazonS3.putObject(putObj);
     }
 
     /**

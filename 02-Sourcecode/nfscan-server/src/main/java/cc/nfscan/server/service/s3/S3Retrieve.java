@@ -1,8 +1,6 @@
 package cc.nfscan.server.service.s3;
 
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +16,10 @@ import java.io.BufferedInputStream;
 abstract class S3Retrieve {
 
     /**
-     * BasicAWSCredentials instance
+     * AmazonS3 instance
      */
     @Autowired
-    private BasicAWSCredentials awsCredentials;
+    private AmazonS3 amazonS3;
 
     /**
      * Gets the input stream containing the contents of this object.
@@ -39,11 +37,8 @@ abstract class S3Retrieve {
      * @return An input stream containing the contents of this object.
      */
     protected BufferedInputStream startDownload(String bucketName, String key) {
-        AmazonS3 s3 = new AmazonS3Client(awsCredentials);
-        S3Object object = s3.getObject(bucketName, key);
+        S3Object object = amazonS3.getObject(bucketName, key);
         S3ObjectInputStream inputStream = object.getObjectContent();
-
-        BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
-        return bufferedInputStream;
+        return new BufferedInputStream(inputStream);
     }
 }

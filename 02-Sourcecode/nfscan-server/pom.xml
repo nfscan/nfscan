@@ -78,7 +78,7 @@
     <properties>
         <org.springframework.version>4.2.3.RELEASE</org.springframework.version>
         <org.springframework.security.version>4.0.3.RELEASE</org.springframework.security.version>
-        <com.amazonaws.version>1.9.22</com.amazonaws.version>
+        <com.amazonaws.version>1.11.44</com.amazonaws.version>
         <configuration.source>1.7</configuration.source>
         <configuration.target>1.7</configuration.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -173,11 +173,22 @@
             <artifactId>commons-validator</artifactId>
             <version>1.4.0</version>
         </dependency>
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.10</version>
+        </dependency>
 
         <!-- Amazon Sdk  -->
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>aws-java-sdk-dynamodb</artifactId>
+            <version>${com.amazonaws.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-s3</artifactId>
             <version>${com.amazonaws.version}</version>
         </dependency>
 
@@ -191,8 +202,7 @@
         <dependency>
             <groupId>com.amazonaws</groupId>
             <artifactId>amazon-sqs-java-messaging-lib</artifactId>
-            <version>1.0.0</version>
-            <type>jar</type>
+            <version>1.0.1</version>
         </dependency>
 
         <!-- Logging Dependencies -->
@@ -210,6 +220,14 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <version>1.6.1</version>
+        </dependency>
+
+        <!-- HTTP Client -->
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.2</version>
+            <scope>runtime</scope>
         </dependency>
 
         <!-- Testing Frameworks -->
@@ -297,9 +315,6 @@
                                       file="resources/env-properties/log4j-${target.env}.properties"/>
                                 <copy overwrite="true" tofile="src/main/resources/application-prop.properties"
                                       file="resources/env-properties/application-prop-${target.env}.properties"/>
-                                <copy overwrite="true" tofile="src/main/resources/springconfiguration/aws-credentials.xml"
-                                      file="resources/env-properties/aws-credentials-${target.env}.xml"/>
-
                             </tasks>
                         </configuration>
                         <goals>
