@@ -7,7 +7,7 @@
       "Type": "AWS::EC2::KeyPair::KeyName",
       "ConstraintDescription" : "Can contain only ASCII characters."
     },
-    "InstanceType" : {
+    "WebTierInstanceType" : {
       "Description" : "WebServer EC2 instance type",
       "Type" : "String",
       "Default" : "t2.micro",
@@ -23,7 +23,7 @@
       "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
       "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x"
     },
-    "BackendAdminName" : {
+    "WebTierAdminName" : {
       "Description" : "The username that can be used to access the Administration interface",
       "Type": "String",
       "MinLength": "5",
@@ -31,7 +31,7 @@
       "Default": "admin",
       "AllowedPattern" : "[a-zA-Z0-9]*"
     },
-    "BackendAdminPassword" : {
+    "WebTierAdminPassword" : {
       "Description" : "The password that can be used to access the Administration interface",
       "Type": "String",
       "MinLength": "6",
@@ -40,7 +40,7 @@
       "AllowedPattern" : "[a-zA-Z0-9]*"
     },
     "WebTierDesiredCapacity" : {
-      "Description" : "The amount of Web server in the web tier",
+      "Description" : "The amount of instances in the web tier",
       "Type": "Number",
       "MinValue": "1",
       "MaxValue": "10",
@@ -52,6 +52,20 @@
       "MinLength": "6",
       "MaxLength": "70",
       "AllowedPattern" : "[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})"
+    },
+    "WorkerTierInstanceType" : {
+      "Description" : "WorkerServer EC2 instance type",
+      "Type" : "String",
+      "Default" : "t2.micro",
+      "AllowedValues" : [ "t2.micro", "t2.small", "t2.medium", "m3.medium", "m3.large"],
+      "ConstraintDescription" : "Must be a valid EC2 instance type"
+    },
+    "WorkerTierDesiredCapacity" : {
+      "Description" : "The amount of instances in the worker tier",
+      "Type": "Number",
+      "MinValue": "1",
+      "MaxValue": "10",
+      "Default": "1"
     }
   },
   "Mappings": {
@@ -74,7 +88,8 @@
     },
     "AWSRegionArch2AMI" : {
       "us-east-1" : {
-        "HVM64" : "ami-47134050"
+        "WebTier" : "ami-47134050",
+        "WorkerTier" : "ami-71d68466"
       }
     }
   },
@@ -611,13 +626,13 @@
               },
               "update_username": {
                 "command" : {
-                  "Fn::Sub" : "sed -i -e 's/YourBackendUsernameHere/${BackendAdminName}/g' /usr/share/tomcat8/webapps/ROOT/WEB-INF/classes/application-prop.properties"
+                  "Fn::Sub" : "sed -i -e 's/YourBackendUsernameHere/${WebTierAdminName}/g' /usr/share/tomcat8/webapps/ROOT/WEB-INF/classes/application-prop.properties"
                 },
                 "ignoreErrors" : "false"
               },
               "update_password": {
                 "command" : {
-                  "Fn::Sub" : "sed -i -e 's/YourBackendPasswdHere/${BackendAdminPassword}/g' /usr/share/tomcat8/webapps/ROOT/WEB-INF/classes/application-prop.properties"
+                  "Fn::Sub" : "sed -i -e 's/YourBackendPasswdHere/${WebTierAdminPassword}/g' /usr/share/tomcat8/webapps/ROOT/WEB-INF/classes/application-prop.properties"
                 },
                 "ignoreErrors" : "false"
               }
@@ -626,8 +641,8 @@
         }
       },
       "Properties": {
-        "ImageId" : { "Fn::FindInMap": [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "HVM64"]},
-        "InstanceType"   : { "Ref" : "InstanceType" },
+        "ImageId" : { "Fn::FindInMap": [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "WebTier"]},
+        "InstanceType"   : { "Ref" : "WebTierInstanceType" },
         "SecurityGroups" : [ { "Ref": "WebTierSecurityGroup" }],
         "KeyName"        : { "Ref" : "KeyName" },
         "AssociatePublicIpAddress": "true",
@@ -776,6 +791,133 @@
         } ],
         "ComparisonOperator": "LessThanThreshold",
         "MetricName": "CPUUtilization"
+      }
+    },
+    "WorkerTierInstanceLaunchConfig": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Metadata" : {
+        "Comment1": "Configure properties files with the resources created in this cloudformation template",
+        "AWS::CloudFormation::Init": {
+          "configSets": {
+            "Install": [
+              "Install"
+            ]
+          },
+          "Install": {
+            "commands": {
+              "update_region": {
+                "command" : {
+                  "Fn::Sub" : "sed -i -e 's/YourAWSRegionHere/${AWS::Region}/g' /etc/ocr-process-service/ocr-process-service.cfg"
+                },
+                "ignoreErrors" : "false"
+              },
+              "update_bucket": {
+                "command" : {
+                  "Fn::Sub" : "sed -i -e 's/YourBucketNameHere/${S3TaxReceiptsBucket}/g' /etc/ocr-process-service/ocr-process-service.cfg"
+                },
+                "ignoreErrors" : "false"
+              },
+              "update_queue_in": {
+                "command" : {
+                  "Fn::Sub" : "sed -i -e 's/YourSQSQueueInHere/${SQSOcrProcessIn.QueueName}/g' /etc/ocr-process-service/ocr-process-service.cfg"
+                },
+                "ignoreErrors" : "false"
+              },
+              "update_queue_out": {
+                "command" : {
+                  "Fn::Sub" : "sed -i -e 's/YourSQSQueueOutHere/${SQSOcrProcessOut.QueueName}/g' /etc/ocr-process-service/ocr-process-service.cfg"
+                },
+                "ignoreErrors" : "false"
+              }
+            }
+          }
+        }
+      },
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap": [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "WorkerTier"]},
+        "InstanceType"   : { "Ref" : "WorkerTierInstanceType" },
+        "SecurityGroups" : [ { "Ref": "WorkerTierSecurityGroup" }],
+        "KeyName"        : { "Ref" : "KeyName" },
+        "AssociatePublicIpAddress": "true",
+        "IamInstanceProfile": { "Ref": "NFScanInstanceProfile" },
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -xe\n",
+          "wget https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz\n",
+          "tar zxvf aws-cfn-bootstrap-latest.tar.gz\n",
+          "rm -f aws-cfn-bootstrap-latest.tar.gz\n",
+          "cd aws-cfn*\n",
+          "python setup.py install --force\n",
+          "cd ..\n",
+          "rm -Rf aws-cfn*\n",
+          "# Install the files and packages from the metadata\n",
+          "/usr/local/bin/cfn-init -v ",
+          "         --stack ", { "Ref" : "AWS::StackName" },
+          "         --resource WorkerTierInstanceLaunchConfig ",
+          "         --configsets Install ",
+          "         --region ", { "Ref" : "AWS::Region" }, "\n"
+        ]]}}
+      }
+    },
+    "WorkerTierInstanceFleet": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "DependsOn": "PublicRoute",
+      "Properties": {
+        "AvailabilityZones": [
+          {
+            "Fn::GetAtt": [
+              "WorkerTierSubnet1",
+              "AvailabilityZone"
+            ]
+          },
+          {
+            "Fn::GetAtt": [
+              "WorkerTierSubnet2",
+              "AvailabilityZone"
+            ]
+          }
+        ],
+        "VPCZoneIdentifier": [
+          {
+            "Ref": "WorkerTierSubnet1"
+          },
+          {
+            "Ref": "WorkerTierSubnet2"
+          }
+        ],
+        "LaunchConfigurationName": {
+          "Ref": "WorkerTierInstanceLaunchConfig"
+        },
+        "MinSize": "1",
+        "MaxSize": "10",
+        "DesiredCapacity": {
+          "Ref": "WorkerTierDesiredCapacity"
+        },
+        "HealthCheckGracePeriod": 200,
+        "NotificationConfigurations" : [
+          {
+            "TopicARN" : { "Ref" : "SNSNotificationTopic" },
+            "NotificationTypes" : [
+              "autoscaling:EC2_INSTANCE_LAUNCH",
+              "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+              "autoscaling:EC2_INSTANCE_TERMINATE",
+              "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+            ]
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "nfscan :: Worker-tier",
+            "PropagateAtLaunch": "true"
+          }
+        ]
+      },
+      "UpdatePolicy": {
+        "AutoScalingRollingUpdate": {
+          "MinInstancesInService": "1",
+          "MaxBatchSize": "1",
+          "PauseTime": "PT5M"
+        }
       }
     }
   },
