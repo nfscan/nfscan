@@ -14,6 +14,14 @@ Frequent asked questions in [Portuguese](http://nfscan.cc/faq.html)
 * Upgrade spring security for higher security.
 * Clean up unused libraries on pom.xml.
 
+## Quickly deploy nfscan to AWS
+
+Region  | Action
+------------- | -------------
+us-east-1 (North Virginia)  | [![](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=nfscan&templateURL=https://s3.amazonaws.com/nfscan-cloudformation-templates/cloudformation.template)
+
+Content Cell  | Content Cell
+
 ## Setting up development environment
 
 Walkthrough in [Portuguese](https://github.com/nfscan/nfscan/wiki/Develpment-environment---%5BPortuguese%5D)
