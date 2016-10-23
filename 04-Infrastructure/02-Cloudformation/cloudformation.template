@@ -56,8 +56,8 @@
     "WorkerTierInstanceType" : {
       "Description" : "WorkerServer EC2 instance type",
       "Type" : "String",
-      "Default" : "t2.micro",
-      "AllowedValues" : [ "t2.micro", "t2.small", "t2.medium", "m3.medium", "m3.large"],
+      "Default" : "c4.large",
+      "AllowedValues" : [ "t2.medium", "t2.large", "c4.large", "c4.xlarge", "c4.2xlarge", "c4.4xlarge", "c4.8xlarge"],
       "ConstraintDescription" : "Must be a valid EC2 instance type"
     },
     "WorkerTierDesiredCapacity" : {
@@ -88,8 +88,52 @@
     },
     "AWSRegionArch2AMI" : {
       "us-east-1" : {
-        "WebTier" : "ami-47134050",
-        "WorkerTier" : "ami-71d68466"
+        "WebTier" : "ami-977e2380",
+        "WorkerTier" : "ami-cf7f22d8"
+      },
+      "us-east-2" : {
+        "WebTier" : "ami-06045e63",
+        "WorkerTier" : "ami-07045e62"
+      },
+      "us-west-1" : {
+        "WebTier" : "ami-89450ee9",
+        "WorkerTier" : "ami-a8460dc8"
+      },
+      "us-west-2" : {
+        "WebTier" : "ami-0157f361",
+        "WorkerTier" : "ami-a356f2c3"
+      },
+      "ap-south-1" : {
+        "WebTier" : "ami-3a5f2b55",
+        "WorkerTier" : "ami-625d290d"
+      },
+      "ap-northeast-1" : {
+        "WebTier" : "ami-5f62c33e",
+        "WorkerTier" : "ami-d060c1b1"
+      },
+      "ap-northeast-2" : {
+        "WebTier" : "ami-b9e93dd7",
+        "WorkerTier" : "ami-73eb3f1d"
+      },
+      "ap-southeast-1" : {
+        "WebTier" : "ami-94ec4df7",
+        "WorkerTier" : "ami-8aef4ee9"
+      },
+      "ap-southeast-2" : {
+        "WebTier" : "ami-6c073a0f",
+        "WorkerTier" : "ami-74063b17"
+      },
+      "eu-central-1" : {
+        "WebTier" : "ami-47b94128",
+        "WorkerTier" : "ami-4cb94123"
+      },
+      "eu-west-1" : {
+        "WebTier" : "ami-3b4b0248",
+        "WorkerTier" : "ami-a24801d1"
+      },
+      "sa-east-1" : {
+        "WebTier" : "ami-2cd64a40",
+        "WorkerTier" : "ami-4bd44827"
       }
     }
   },
@@ -760,7 +804,7 @@
     "WebTierCPUAlarmHigh": {
       "Type": "AWS::CloudWatch::Alarm",
       "Properties": {
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "5",
         "Statistic": "Average",
         "Threshold": "70",
         "AlarmDescription": "Alarm if CPU too high or metric disappears indicating instance is down",
@@ -778,7 +822,7 @@
     "WebTierCPUAlarmLow": {
       "Type": "AWS::CloudWatch::Alarm",
       "Properties": {
-        "EvaluationPeriods": "1",
+        "EvaluationPeriods": "5",
         "Statistic": "Average",
         "Threshold": "30",
         "AlarmDescription": "Alarm if CPU too low",
@@ -919,11 +963,69 @@
           "PauseTime": "PT5M"
         }
       }
+    },
+    "WorkerTierScaleUpPolicy" : {
+      "Type" : "AWS::AutoScaling::ScalingPolicy",
+      "Properties" : {
+        "AdjustmentType" : "ChangeInCapacity",
+        "AutoScalingGroupName" : { "Ref" : "WorkerTierInstanceFleet" },
+        "Cooldown" : "300",
+        "ScalingAdjustment" : 1
+      }
+    },
+    "WorkerTierScaleDownPolicy" : {
+      "Type" : "AWS::AutoScaling::ScalingPolicy",
+      "Properties" : {
+        "AdjustmentType" : "ChangeInCapacity",
+        "AutoScalingGroupName" : { "Ref" : "WorkerTierInstanceFleet" },
+        "Cooldown" : "300",
+        "ScalingAdjustment" : -1
+      }
+    },
+    "WorkerTierMessagesInQueueAlarmHigh": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": "1",
+        "Statistic": "Sum",
+        "Threshold": "3",
+        "AlarmDescription": "Alarm if the number of OCR messages to be processed is too high",
+        "Period": "60",
+        "AlarmActions": [ { "Ref": "WorkerTierScaleUpPolicy" } ],
+        "Namespace": "Loducca/NFScan",
+        "Dimensions": [ {
+          "Name": "AutoScalingGroupName",
+          "Value": { "Ref": "WorkerTierInstanceFleet" }
+        } ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "MetricName": "OCR_PROCESS_IN_QUEUE_MESSAGES_SENT"
+      }
+    },
+    "WorkerTierMessagesInQueueAlarmAlarmLow": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": "5",
+        "Statistic": "Sum",
+        "Threshold": "3",
+        "AlarmDescription": "Alarm if the number of OCR messages to be processed is too low",
+        "Period": "60",
+        "AlarmActions": [ { "Ref": "WorkerTierScaleDownPolicy" } ],
+        "Namespace": "Loducca/NFScan",
+        "Dimensions": [ {
+          "Name": "AutoScalingGroupName",
+          "Value": { "Ref": "WorkerTierInstanceFleet" }
+        } ],
+        "ComparisonOperator": "LessThanThreshold",
+        "MetricName": "OCR_PROCESS_IN_QUEUE_MESSAGES_SENT"
+      }
     }
   },
   "Outputs" : {
     "BackendUrl" : {
-      "Description" : "Backend url that you'll use in the mobile app",
+      "Description" : "Administration interface url that you might wanna use it",
+      "Value" : { "Fn::Sub" : "http://${ElasticLoadBalancer.DNSName}/be" }
+    },
+    "MobileIntegrationUrl" : {
+      "Description" : "Url that you're gonna provide to the mobile app",
       "Value" : { "Fn::GetAtt" : [ "ElasticLoadBalancer", "DNSName" ]}
     }
   }
