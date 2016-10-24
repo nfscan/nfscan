@@ -14,6 +14,8 @@ Frequent asked questions in [Portuguese](http://nfscan.cc/faq.html)
 * Parameterize backend username and password.
 * Upgrade AWS sdk to 1.11.44.
 
+Looking for older versions changes? Please take a look at [CHANGELOGS.md](CHANGELOGS.md)
+
 ## Quickly deploy nfscan to AWS
 
 The easiest way to deploy nfscan to AWS is through the use of a [Cloudformation](https://aws.amazon.com/cloudformation/) template. It allows the required infrastructure and dependent services to be provisioned with little to none knowledge of AWS. 
