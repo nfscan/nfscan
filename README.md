@@ -9,6 +9,7 @@ Frequent asked questions in [Portuguese](http://nfscan.cc/faq.html)
 
 ## What's new in this version
 
+* Create Cloudformation templates to allow easy deploy by anyone with an AWS account.
 * Access AWS resources using IAM roles instead of hardcoded accessKeys and secretKeys.
 * Remove references to BasicCredentials since we're gonna use AWSCredentialsChain for that.
 * Parameterize backend username and password.
