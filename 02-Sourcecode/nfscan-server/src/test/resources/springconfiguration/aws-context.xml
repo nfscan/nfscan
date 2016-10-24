@@ -51,4 +51,10 @@
         <constructor-arg index="1" ref="dynamoDBMapperConfig" />
     </bean>
 
+    <!-- Amazon S3 -->
+    <bean id="amazonS3Client" class="com.amazonaws.services.s3.AmazonS3Client">
+        <constructor-arg index="0" ref="BasicAWSCredentials" />
+    </bean>
+
+
 </beans>
