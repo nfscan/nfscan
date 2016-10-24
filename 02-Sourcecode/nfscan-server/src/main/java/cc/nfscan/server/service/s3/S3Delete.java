@@ -2,9 +2,7 @@ package cc.nfscan.server.service.s3;
 
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.model.DeleteObjectRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -17,10 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 abstract class S3Delete {
 
     /**
-     * BasicAWSCredentials instance
+     * AmazonS3 instance
      */
     @Autowired
-    private BasicAWSCredentials awsCredentials;
+    private AmazonS3 amazonS3;
 
     /**
      * Deletes the specified object in the specified bucket
@@ -33,8 +31,7 @@ abstract class S3Delete {
      *                                request.
      */
     protected void startDelete(String bucketName, String key) throws AmazonClientException, AmazonServiceException {
-        AmazonS3 s3 = new AmazonS3Client(awsCredentials);
         DeleteObjectRequest deleteObjectRequest = new DeleteObjectRequest(bucketName, key);
-        s3.deleteObject(deleteObjectRequest);
+        amazonS3.deleteObject(deleteObjectRequest);
     }
 }

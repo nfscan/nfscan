@@ -1,0 +1,1032 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Deploy nfscan project",
+  "Parameters" : {
+    "KeyName": {
+      "Description" : "Name of an existing EC2 KeyPair to enable SSH access to the instance",
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "ConstraintDescription" : "Can contain only ASCII characters."
+    },
+    "WebTierInstanceType" : {
+      "Description" : "WebServer EC2 instance type",
+      "Type" : "String",
+      "Default" : "t2.micro",
+      "AllowedValues" : [ "t2.micro", "t2.small", "t2.medium", "m3.medium", "m3.large"],
+      "ConstraintDescription" : "Must be a valid EC2 instance type"
+    },
+    "SSHLocation" : {
+      "Description" : "The IP address range that can be used to SSH to the EC2 instances",
+      "Type": "String",
+      "MinLength": "9",
+      "MaxLength": "18",
+      "Default": "0.0.0.0/0",
+      "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
+      "ConstraintDescription": "Must be a valid IP CIDR range of the form x.x.x.x/x"
+    },
+    "WebTierAdminName" : {
+      "Description" : "The username that can be used to access the Administration interface",
+      "Type": "String",
+      "MinLength": "5",
+      "MaxLength": "18",
+      "Default": "admin",
+      "AllowedPattern" : "[a-zA-Z0-9]*"
+    },
+    "WebTierAdminPassword" : {
+      "Description" : "The password that can be used to access the Administration interface",
+      "Type": "String",
+      "MinLength": "6",
+      "MaxLength": "18",
+      "NoEcho": true,
+      "AllowedPattern" : "[a-zA-Z0-9]*"
+    },
+    "WebTierDesiredCapacity" : {
+      "Description" : "The amount of instances in the web tier",
+      "Type": "Number",
+      "MinValue": "1",
+      "MaxValue": "10",
+      "Default": "1"
+    },
+    "SNSNotificationEmail" :{
+      "Description": "The email address you want to receive auto scaling event notifications",
+      "Type": "String",
+      "MinLength": "6",
+      "MaxLength": "70",
+      "AllowedPattern" : "[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})"
+    },
+    "WorkerTierInstanceType" : {
+      "Description" : "WorkerServer EC2 instance type",
+      "Type" : "String",
+      "Default" : "c4.large",
+      "AllowedValues" : [ "t2.medium", "t2.large", "c4.large", "c4.xlarge", "c4.2xlarge", "c4.4xlarge", "c4.8xlarge"],
+      "ConstraintDescription" : "Must be a valid EC2 instance type"
+    },
+    "WorkerTierDesiredCapacity" : {
+      "Description" : "The amount of instances in the worker tier",
+      "Type": "Number",
+      "MinValue": "1",
+      "MaxValue": "10",
+      "Default": "1"
+    }
+  },
+  "Mappings": {
+    "SubnetConfig": {
+      "VPC": {
+        "CIDR": "10.0.0.0/16"
+      },
+      "WebTierSubnet1": {
+        "CIDR": "10.0.0.0/24"
+      },
+      "WebTierSubnet2": {
+        "CIDR": "10.0.1.0/24"
+      },
+      "WorkerTierSubnet1": {
+        "CIDR": "10.0.2.0/24"
+      },
+      "WorkerTierSubnet2": {
+        "CIDR": "10.0.3.0/24"
+      }
+    },
+    "AWSRegionArch2AMI" : {
+      "us-east-1" : {
+        "WebTier" : "ami-977e2380",
+        "WorkerTier" : "ami-cf7f22d8"
+      },
+      "us-east-2" : {
+        "WebTier" : "ami-06045e63",
+        "WorkerTier" : "ami-07045e62"
+      },
+      "us-west-1" : {
+        "WebTier" : "ami-89450ee9",
+        "WorkerTier" : "ami-a8460dc8"
+      },
+      "us-west-2" : {
+        "WebTier" : "ami-0157f361",
+        "WorkerTier" : "ami-a356f2c3"
+      },
+      "ap-south-1" : {
+        "WebTier" : "ami-3a5f2b55",
+        "WorkerTier" : "ami-625d290d"
+      },
+      "ap-northeast-1" : {
+        "WebTier" : "ami-5f62c33e",
+        "WorkerTier" : "ami-d060c1b1"
+      },
+      "ap-northeast-2" : {
+        "WebTier" : "ami-b9e93dd7",
+        "WorkerTier" : "ami-73eb3f1d"
+      },
+      "ap-southeast-1" : {
+        "WebTier" : "ami-94ec4df7",
+        "WorkerTier" : "ami-8aef4ee9"
+      },
+      "ap-southeast-2" : {
+        "WebTier" : "ami-6c073a0f",
+        "WorkerTier" : "ami-74063b17"
+      },
+      "eu-central-1" : {
+        "WebTier" : "ami-47b94128",
+        "WorkerTier" : "ami-4cb94123"
+      },
+      "eu-west-1" : {
+        "WebTier" : "ami-3b4b0248",
+        "WorkerTier" : "ami-a24801d1"
+      },
+      "sa-east-1" : {
+        "WebTier" : "ami-2cd64a40",
+        "WorkerTier" : "ami-4bd44827"
+      }
+    }
+  },
+  "Resources": {
+    "VPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "VPC",
+            "CIDR"
+          ]
+        },
+        "EnableDnsSupport": "true",
+        "EnableDnsHostnames": "true",
+        "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "nfscan"
+          }
+        ]
+      }
+    },
+    "WebTierSubnet1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "WebTierSubnet1",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone" : {
+          "Fn::Select" : [ "0", { "Fn::GetAZs" : "" } ]
+        },
+        "MapPublicIpOnLaunch": true,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Web-tier :: Public Subnet 1"
+          }
+        ]
+      }
+    },
+    "WebTierSubnet2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "WebTierSubnet2",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone" : {
+          "Fn::Select" : [ "1", { "Fn::GetAZs" : "" } ]
+        },
+        "MapPublicIpOnLaunch": true,
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Web-tier :: Public Subnet 2"
+          }
+        ]
+      }
+    },
+    "WorkerTierSubnet1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "WorkerTierSubnet1",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone" : {
+          "Fn::Select" : [ "0", { "Fn::GetAZs" : "" } ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Worker-tier :: Public Subnet 1"
+          }
+        ]
+      }
+    },
+    "WorkerTierSubnet2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": {
+          "Fn::FindInMap": [
+            "SubnetConfig",
+            "WorkerTierSubnet2",
+            "CIDR"
+          ]
+        },
+        "AvailabilityZone" : {
+          "Fn::Select" : [ "1", { "Fn::GetAZs" : "" } ]
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Worker-tier :: Public Subnet 2"
+          }
+        ]
+      }
+    },
+    "InternetGateway": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "nfscan"
+          }
+        ]
+      }
+    },
+    "GatewayToInternet": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "InternetGatewayId": {
+          "Ref": "InternetGateway"
+        }
+      }
+    },
+    "PublicRouteTable": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "nfscan"
+          }
+        ]
+      }
+    },
+    "PublicRoute": {
+      "Type": "AWS::EC2::Route",
+      "DependsOn": "GatewayToInternet",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "InternetGateway"
+        }
+      }
+    },
+    "WebTierSubnet1RouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "WebTierSubnet1"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        }
+      }
+    },
+    "WebTierSubnet2RouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "WebTierSubnet2"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        }
+      }
+    },
+    "WorkerTierSubnet1RouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "WorkerTierSubnet1"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        }
+      }
+    },
+    "WorkerTierSubnet2RouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "WorkerTierSubnet2"
+        },
+        "RouteTableId": {
+          "Ref": "PublicRouteTable"
+        }
+      }
+    },
+    "PublicLoadBalancerSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Public ELB Security Group with HTTP access on port 80 from the internet",
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "SecurityGroupEgress": []
+      }
+    },
+    "WebTierSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Web-tier Security Group with HTTP access on port 8080 from the ELB",
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "8080",
+            "ToPort": "8080",
+            "SourceSecurityGroupId": { "Ref": "PublicLoadBalancerSecurityGroup" }
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+            "CidrIp" : { "Ref" : "SSHLocation"}
+          }
+        ],
+        "SecurityGroupEgress": []
+      }
+    },
+    "WorkerTierSecurityGroup": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Worker-tier Security Group with no access to the other instances",
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "SecurityGroupIngress": [],
+        "SecurityGroupEgress": []
+      }
+    },
+    "S3TaxReceiptsBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "nfscan"
+          }
+        ]
+      }
+    },
+    "SQSOcrProcessIn":{
+        "Type" : "AWS::SQS::Queue",
+        "Properties" : {
+          "DelaySeconds": 0,
+          "MaximumMessageSize": 262144,
+          "MessageRetentionPeriod": 345600,
+          "QueueName": "PROD-NFSCAN-OCR-PROCESS-IN",
+          "ReceiveMessageWaitTimeSeconds": 0,
+          "VisibilityTimeout": 30
+        }
+    },
+    "SQSOcrProcessOut":{
+      "Type" : "AWS::SQS::Queue",
+      "Properties" : {
+        "DelaySeconds": 0,
+        "MaximumMessageSize": 262144,
+        "MessageRetentionPeriod": 345600,
+        "QueueName": "PROD-NFSCAN-OCR-PROCESS-OUT",
+        "ReceiveMessageWaitTimeSeconds": 0,
+        "VisibilityTimeout": 30
+      }
+    },
+    "DynamoDBOcrTransaction":{
+      "Type" : "AWS::DynamoDB::Table",
+      "Properties" : {
+        "AttributeDefinitions" : [
+          {
+            "AttributeName" : "transaction_id",
+            "AttributeType" : "S"
+          }
+        ],
+        "KeySchema" : [
+          {
+            "AttributeName" : "transaction_id",
+            "KeyType" : "HASH"
+          }
+        ],
+        "ProvisionedThroughput" : {
+          "ReadCapacityUnits" : "1",
+          "WriteCapacityUnits" : "1"
+        },
+        "TableName" : "PROD-NFSCAN-OCRTRANSACTION"
+      }
+    },
+    "DynamoDBTaxReceipt":{
+      "Type" : "AWS::DynamoDB::Table",
+      "Properties" : {
+        "AttributeDefinitions" : [
+          {
+            "AttributeName" : "taxreceipt_id",
+            "AttributeType" : "S"
+          }
+        ],
+        "KeySchema" : [
+          {
+            "AttributeName" : "taxreceipt_id",
+            "KeyType" : "HASH"
+          }
+        ],
+        "ProvisionedThroughput" : {
+          "ReadCapacityUnits" : "1",
+          "WriteCapacityUnits" : "1"
+        },
+        "TableName" : "PROD-NFSCAN-TAXRECEIPT"
+      }
+    },
+    "DynamoDBTaxReceiptArchive":{
+      "Type" : "AWS::DynamoDB::Table",
+      "Properties" : {
+        "AttributeDefinitions" : [
+          {
+            "AttributeName" : "taxreceiptarchive_id",
+            "AttributeType" : "S"
+          }
+        ],
+        "KeySchema" : [
+          {
+            "AttributeName" : "taxreceiptarchive_id",
+            "KeyType" : "HASH"
+          }
+        ],
+        "ProvisionedThroughput" : {
+          "ReadCapacityUnits" : "1",
+          "WriteCapacityUnits" : "1"
+        },
+        "TableName" : "PROD-NFSCAN-TAXRECEIPTARCHIVE"
+      }
+    },
+    "NFScanPolicy": {
+      "Type" : "AWS::IAM::ManagedPolicy",
+      "Properties" : {
+        "Description": "nfscan_policy",
+        "PolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:ListBucket"
+              ],
+              "Resource": [
+                {
+                  "Fn::Sub" : "arn:aws:s3:::${S3TaxReceiptsBucket}"
+                }
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:DeleteObject",
+                "s3:PutObjectAcl"
+              ],
+              "Resource": [
+                {
+                  "Fn::Sub" : "arn:aws:s3:::${S3TaxReceiptsBucket}/*"
+                }
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "sqs:DeleteMessage",
+                "sqs:GetQueueAttributes",
+                "sqs:GetQueueUrl",
+                "sqs:ReceiveMessage",
+                "sqs:SendMessage"
+              ],
+              "Resource": [
+                {
+                  "Fn::Sub" : "${SQSOcrProcessIn.Arn}"
+                },
+                {
+                  "Fn::Sub" : "${SQSOcrProcessOut.Arn}"
+                }
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:GetItem",
+                "dynamodb:PutItem",
+                "dynamodb:Query",
+                "dynamodb:Scan",
+                "dynamodb:UpdateItem",
+                "dynamodb:DescribeTable"
+              ],
+              "Resource": [
+                {
+                  "Fn::Sub" : "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBOcrTransaction}"
+                },
+                {
+                  "Fn::Sub" : "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTaxReceipt}"
+                },
+                {
+                  "Fn::Sub" : "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${DynamoDBTaxReceiptArchive}"
+                }
+              ]
+            },
+            {
+              "Effect": "Allow",
+              "Action": [
+                "cloudwatch:PutMetricData"
+              ],
+              "Resource": [
+                "*"
+              ]
+            }
+          ]
+        }
+      },
+      "DependsOn": ["DynamoDBOcrTransaction","DynamoDBTaxReceiptArchive","DynamoDBTaxReceipt","S3TaxReceiptsBucket", "SQSOcrProcessIn", "SQSOcrProcessOut"]
+    },
+    "NfScanRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version" : "2012-10-17",
+          "Statement": [ {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": [ "ec2.amazonaws.com" ]
+            },
+            "Action": [ "sts:AssumeRole" ]
+          } ]
+        },
+        "ManagedPolicyArns": [{ "Ref": "NFScanPolicy" }]
+      },
+      "DependsOn": [ "NFScanPolicy"]
+    },
+    "NFScanInstanceProfile": {
+      "Type": "AWS::IAM::InstanceProfile",
+      "Properties": {
+        "Path": "/",
+        "Roles": [ {
+          "Ref": "NfScanRole"
+        } ]
+      },
+      "DependsOn": ["NfScanRole"]
+    },
+    "ElasticLoadBalancer" : {
+      "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties" : {
+        "Subnets" : [{ "Ref": "WebTierSubnet1" },{ "Ref": "WebTierSubnet2" }],
+        "CrossZone" : true,
+        "SecurityGroups": [{ "Ref": "PublicLoadBalancerSecurityGroup" }],
+        "Listeners" : [ {
+          "LoadBalancerPort" : "80",
+          "InstancePort" : "8080",
+          "Protocol" : "HTTP"
+        } ],
+        "HealthCheck" : {
+          "Target" : "HTTP:8080/",
+          "HealthyThreshold" : "3",
+          "UnhealthyThreshold" : "5",
+          "Interval" : "30",
+          "Timeout" : "5"
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "nfscan :: LoadBalancer :: Web-tier"
+          }
+        ]
+      }
+    },
+    "WebTierInstanceLaunchConfig": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Metadata" : {
+        "Comment1": "Configure properties files with the resources created in this cloudformation template",
+        "AWS::CloudFormation::Init": {
+          "configSets": {
+            "Install": [
+              "Install"
+            ]
+          },
+          "Install": {
+            "commands": {
+              "update_region": {
+                "command" : {
+                  "Fn::Sub" : "sed -i -e 's/YourAWSRegionHere/${AWS::Region}/g' /usr/share/tomcat8/webapps/ROOT/WEB-INF/classes/application-prop.properties"
+                },
+                "ignoreErrors" : "false"
+              },
+              "update_bucket": {
+                "command" : {
+                  "Fn::Sub" : "sed -i -e 's/YourBucketNameHere/${S3TaxReceiptsBucket}/g' /usr/share/tomcat8/webapps/ROOT/WEB-INF/classes/application-prop.properties"
+                },
+                "ignoreErrors" : "false"
+              },
+              "update_username": {
+                "command" : {
+                  "Fn::Sub" : "sed -i -e 's/YourBackendUsernameHere/${WebTierAdminName}/g' /usr/share/tomcat8/webapps/ROOT/WEB-INF/classes/application-prop.properties"
+                },
+                "ignoreErrors" : "false"
+              },
+              "update_password": {
+                "command" : {
+                  "Fn::Sub" : "sed -i -e 's/YourBackendPasswdHere/${WebTierAdminPassword}/g' /usr/share/tomcat8/webapps/ROOT/WEB-INF/classes/application-prop.properties"
+                },
+                "ignoreErrors" : "false"
+              }
+            }
+          }
+        }
+      },
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap": [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "WebTier"]},
+        "InstanceType"   : { "Ref" : "WebTierInstanceType" },
+        "SecurityGroups" : [ { "Ref": "WebTierSecurityGroup" }],
+        "KeyName"        : { "Ref" : "KeyName" },
+        "AssociatePublicIpAddress": "true",
+        "IamInstanceProfile": { "Ref": "NFScanInstanceProfile" },
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -xe\n",
+          "yum update -y aws-cfn-bootstrap\n",
+
+          "# Install the files and packages from the metadata\n",
+          "/opt/aws/bin/cfn-init -v ",
+          "         --stack ", { "Ref" : "AWS::StackName" },
+          "         --resource WebTierInstanceLaunchConfig ",
+          "         --configsets Install ",
+          "         --region ", { "Ref" : "AWS::Region" }, "\n"
+        ]]}}
+      }
+    },
+    "SNSNotificationTopic": {
+      "Type" : "AWS::SNS::Topic",
+      "Properties" : {
+        "DisplayName" : { "Ref" : "AWS::StackName" },
+        "Subscription" : [ {
+          "Endpoint" : { "Ref": "SNSNotificationEmail" },
+          "Protocol" : "email"
+        }],
+        "TopicName" : { "Ref" : "AWS::StackName" }
+      }
+    },
+    "WebTierInstanceFleet": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "DependsOn": "PublicRoute",
+      "Properties": {
+        "AvailabilityZones": [
+          {
+            "Fn::GetAtt": [
+              "WebTierSubnet1",
+              "AvailabilityZone"
+            ]
+          },
+          {
+            "Fn::GetAtt": [
+              "WebTierSubnet2",
+              "AvailabilityZone"
+            ]
+          }
+        ],
+        "VPCZoneIdentifier": [
+          {
+            "Ref": "WebTierSubnet1"
+          },
+          {
+            "Ref": "WebTierSubnet2"
+          }
+        ],
+        "LaunchConfigurationName": {
+          "Ref": "WebTierInstanceLaunchConfig"
+        },
+        "MinSize": "1",
+        "MaxSize": "10",
+        "DesiredCapacity": {
+          "Ref": "WebTierDesiredCapacity"
+        },
+        "LoadBalancerNames": [
+          {
+            "Ref": "ElasticLoadBalancer"
+          }
+        ],
+        "HealthCheckType" : "ELB",
+        "HealthCheckGracePeriod": 200,
+        "NotificationConfigurations" : [
+          {
+            "TopicARN" : { "Ref" : "SNSNotificationTopic" },
+            "NotificationTypes" : [
+              "autoscaling:EC2_INSTANCE_LAUNCH",
+              "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+              "autoscaling:EC2_INSTANCE_TERMINATE",
+              "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+            ]
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "nfscan :: Web-tier",
+            "PropagateAtLaunch": "true"
+          }
+        ]
+      },
+      "UpdatePolicy": {
+        "AutoScalingRollingUpdate": {
+          "MinInstancesInService": "1",
+          "MaxBatchSize": "1",
+          "PauseTime": "PT5M"
+        }
+      }
+    },
+    "WebTierScaleUpPolicy" : {
+      "Type" : "AWS::AutoScaling::ScalingPolicy",
+      "Properties" : {
+        "AdjustmentType" : "ChangeInCapacity",
+        "AutoScalingGroupName" : { "Ref" : "WebTierInstanceFleet" },
+        "Cooldown" : "300",
+        "ScalingAdjustment" : 1
+      }
+    },
+    "WebTierScaleDownPolicy" : {
+      "Type" : "AWS::AutoScaling::ScalingPolicy",
+      "Properties" : {
+        "AdjustmentType" : "ChangeInCapacity",
+        "AutoScalingGroupName" : { "Ref" : "WebTierInstanceFleet" },
+        "Cooldown" : "300",
+        "ScalingAdjustment" : -1
+      }
+    },
+    "WebTierCPUAlarmHigh": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": "5",
+        "Statistic": "Average",
+        "Threshold": "70",
+        "AlarmDescription": "Alarm if CPU too high or metric disappears indicating instance is down",
+        "Period": "60",
+        "AlarmActions": [ { "Ref": "WebTierScaleUpPolicy" } ],
+        "Namespace": "AWS/EC2",
+        "Dimensions": [ {
+          "Name": "AutoScalingGroupName",
+          "Value": { "Ref": "WebTierInstanceFleet" }
+        } ],
+        "ComparisonOperator": "GreaterThanThreshold",
+        "MetricName": "CPUUtilization"
+      }
+    },
+    "WebTierCPUAlarmLow": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": "5",
+        "Statistic": "Average",
+        "Threshold": "30",
+        "AlarmDescription": "Alarm if CPU too low",
+        "Period": "60",
+        "AlarmActions": [ { "Ref": "WebTierScaleDownPolicy" } ],
+        "Namespace": "AWS/EC2",
+        "Dimensions": [ {
+          "Name": "AutoScalingGroupName",
+          "Value": { "Ref": "WebTierInstanceFleet" }
+        } ],
+        "ComparisonOperator": "LessThanThreshold",
+        "MetricName": "CPUUtilization"
+      }
+    },
+    "WorkerTierInstanceLaunchConfig": {
+      "Type": "AWS::AutoScaling::LaunchConfiguration",
+      "Metadata" : {
+        "Comment1": "Configure properties files with the resources created in this cloudformation template",
+        "AWS::CloudFormation::Init": {
+          "configSets": {
+            "Install": [
+              "Install"
+            ]
+          },
+          "Install": {
+            "commands": {
+              "update_region": {
+                "command" : {
+                  "Fn::Sub" : "sed -i -e 's/YourAWSRegionHere/${AWS::Region}/g' /etc/ocr-process-service/ocr-process-service.cfg"
+                },
+                "ignoreErrors" : "false"
+              },
+              "update_bucket": {
+                "command" : {
+                  "Fn::Sub" : "sed -i -e 's/YourBucketNameHere/${S3TaxReceiptsBucket}/g' /etc/ocr-process-service/ocr-process-service.cfg"
+                },
+                "ignoreErrors" : "false"
+              },
+              "update_queue_in": {
+                "command" : {
+                  "Fn::Sub" : "sed -i -e 's/YourSQSQueueInHere/${SQSOcrProcessIn.QueueName}/g' /etc/ocr-process-service/ocr-process-service.cfg"
+                },
+                "ignoreErrors" : "false"
+              },
+              "update_queue_out": {
+                "command" : {
+                  "Fn::Sub" : "sed -i -e 's/YourSQSQueueOutHere/${SQSOcrProcessOut.QueueName}/g' /etc/ocr-process-service/ocr-process-service.cfg"
+                },
+                "ignoreErrors" : "false"
+              }
+            }
+          }
+        }
+      },
+      "Properties": {
+        "ImageId" : { "Fn::FindInMap": [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" }, "WorkerTier"]},
+        "InstanceType"   : { "Ref" : "WorkerTierInstanceType" },
+        "SecurityGroups" : [ { "Ref": "WorkerTierSecurityGroup" }],
+        "KeyName"        : { "Ref" : "KeyName" },
+        "AssociatePublicIpAddress": "true",
+        "IamInstanceProfile": { "Ref": "NFScanInstanceProfile" },
+        "UserData"       : { "Fn::Base64" : { "Fn::Join" : ["", [
+          "#!/bin/bash -xe\n",
+          "wget https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz\n",
+          "tar zxvf aws-cfn-bootstrap-latest.tar.gz\n",
+          "rm -f aws-cfn-bootstrap-latest.tar.gz\n",
+          "cd aws-cfn*\n",
+          "python setup.py install --force\n",
+          "cd ..\n",
+          "rm -Rf aws-cfn*\n",
+          "# Install the files and packages from the metadata\n",
+          "/usr/local/bin/cfn-init -v ",
+          "         --stack ", { "Ref" : "AWS::StackName" },
+          "         --resource WorkerTierInstanceLaunchConfig ",
+          "         --configsets Install ",
+          "         --region ", { "Ref" : "AWS::Region" }, "\n"
+        ]]}}
+      }
+    },
+    "WorkerTierInstanceFleet": {
+      "Type": "AWS::AutoScaling::AutoScalingGroup",
+      "DependsOn": "PublicRoute",
+      "Properties": {
+        "AvailabilityZones": [
+          {
+            "Fn::GetAtt": [
+              "WorkerTierSubnet1",
+              "AvailabilityZone"
+            ]
+          },
+          {
+            "Fn::GetAtt": [
+              "WorkerTierSubnet2",
+              "AvailabilityZone"
+            ]
+          }
+        ],
+        "VPCZoneIdentifier": [
+          {
+            "Ref": "WorkerTierSubnet1"
+          },
+          {
+            "Ref": "WorkerTierSubnet2"
+          }
+        ],
+        "LaunchConfigurationName": {
+          "Ref": "WorkerTierInstanceLaunchConfig"
+        },
+        "MinSize": "1",
+        "MaxSize": "10",
+        "DesiredCapacity": {
+          "Ref": "WorkerTierDesiredCapacity"
+        },
+        "HealthCheckGracePeriod": 200,
+        "NotificationConfigurations" : [
+          {
+            "TopicARN" : { "Ref" : "SNSNotificationTopic" },
+            "NotificationTypes" : [
+              "autoscaling:EC2_INSTANCE_LAUNCH",
+              "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+              "autoscaling:EC2_INSTANCE_TERMINATE",
+              "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+            ]
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "nfscan :: Worker-tier",
+            "PropagateAtLaunch": "true"
+          }
+        ]
+      },
+      "UpdatePolicy": {
+        "AutoScalingRollingUpdate": {
+          "MinInstancesInService": "1",
+          "MaxBatchSize": "1",
+          "PauseTime": "PT5M"
+        }
+      }
+    },
+    "WorkerTierScaleUpPolicy" : {
+      "Type" : "AWS::AutoScaling::ScalingPolicy",
+      "Properties" : {
+        "AdjustmentType" : "ChangeInCapacity",
+        "AutoScalingGroupName" : { "Ref" : "WorkerTierInstanceFleet" },
+        "Cooldown" : "300",
+        "ScalingAdjustment" : 1
+      }
+    },
+    "WorkerTierScaleDownPolicy" : {
+      "Type" : "AWS::AutoScaling::ScalingPolicy",
+      "Properties" : {
+        "AdjustmentType" : "ChangeInCapacity",
+        "AutoScalingGroupName" : { "Ref" : "WorkerTierInstanceFleet" },
+        "Cooldown" : "300",
+        "ScalingAdjustment" : -1
+      }
+    },
+    "WorkerTierMessagesInQueueAlarmHigh": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": "1",
+        "Statistic": "Sum",
+        "Threshold": "3",
+        "AlarmDescription": "Alarm if the number of OCR messages to be processed is too high",
+        "Period": "60",
+        "AlarmActions": [ { "Ref": "WorkerTierScaleUpPolicy" } ],
+        "Namespace": "Loducca/NFScan",
+        "Dimensions": [ {
+          "Name": "AutoScalingGroupName",
+          "Value": { "Ref": "WorkerTierInstanceFleet" }
+        } ],
+        "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+        "MetricName": "OCR_PROCESS_IN_QUEUE_MESSAGES_SENT"
+      }
+    },
+    "WorkerTierMessagesInQueueAlarmAlarmLow": {
+      "Type": "AWS::CloudWatch::Alarm",
+      "Properties": {
+        "EvaluationPeriods": "5",
+        "Statistic": "Sum",
+        "Threshold": "3",
+        "AlarmDescription": "Alarm if the number of OCR messages to be processed is too low",
+        "Period": "60",
+        "AlarmActions": [ { "Ref": "WorkerTierScaleDownPolicy" } ],
+        "Namespace": "Loducca/NFScan",
+        "Dimensions": [ {
+          "Name": "AutoScalingGroupName",
+          "Value": { "Ref": "WorkerTierInstanceFleet" }
+        } ],
+        "ComparisonOperator": "LessThanThreshold",
+        "MetricName": "OCR_PROCESS_IN_QUEUE_MESSAGES_SENT"
+      }
+    }
+  },
+  "Outputs" : {
+    "BackendUrl" : {
+      "Description" : "Administration interface url that you might wanna use it",
+      "Value" : { "Fn::Sub" : "http://${ElasticLoadBalancer.DNSName}/be" }
+    },
+    "MobileIntegrationUrl" : {
+      "Description" : "Url that you're gonna provide to the mobile app",
+      "Value" : { "Fn::GetAtt" : [ "ElasticLoadBalancer", "DNSName" ]}
+    }
+  }
+}

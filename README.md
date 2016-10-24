@@ -7,12 +7,37 @@ NFScan is a free, open-source software, available to non-profit organizations to
 
 Frequent asked questions in [Portuguese](http://nfscan.cc/faq.html)
 
-## What's new
+## What's new in this version
 
-* Add QRCode and manual donation capabilities.
-* Add unit tests targeting JDK 7 >=.
-* Upgrade spring security for higher security.
-* Clean up unused libraries on pom.xml.
+* Create Cloudformation templates to allow easy deploy by anyone with an AWS account.
+* Access AWS resources using IAM roles instead of hardcoded accessKeys and secretKeys.
+* Remove references to BasicCredentials since we're gonna use AWSCredentialsChain for that.
+* Parameterize backend username and password.
+* Upgrade AWS sdk to 1.11.44.
+
+Looking for older versions changes? Please take a look at [CHANGELOGS.md](CHANGELOGS.md)
+
+## Quickly deploy nfscan to AWS
+
+The easiest way to deploy nfscan to AWS is through the use of a [Cloudformation](https://aws.amazon.com/cloudformation/) template. It allows the required infrastructure and dependent services to be provisioned with little to none knowledge of AWS. 
+
+The table below shows different regions where you want to deploy nfscan. There are numerous factors that you could take into consideration when deciding which one you're going to launch it. However, if your primary concern is about how much it's gonna cost then either N. Virgina and Ohio will be a good call. If low latency is a requirement, then São Paulo will be a better option. 
+
+Region Name | Region | Action
+------------- | ------------- | -------------
+US East (N. Virginia) | us-east-1 | [![](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=nfscan&templateURL=https://s3.amazonaws.com/nfscan-cloudformation-templates/cloudformation.template)
+US East (Ohio) | us-east-2 | [![](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/new?stackName=nfscan&templateURL=https://s3.amazonaws.com/nfscan-cloudformation-templates/cloudformation.template)
+US West (N. California) | us-west-1 | [![](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-1#/stacks/new?stackName=nfscan&templateURL=https://s3.amazonaws.com/nfscan-cloudformation-templates/cloudformation.template)
+US West (Oregon) | us-west-2 | [![](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=nfscan&templateURL=https://s3.amazonaws.com/nfscan-cloudformation-templates/cloudformation.template)
+Asia Pacific (Mumbai) | ap-south-1 | [![](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-south-1#/stacks/new?stackName=nfscan&templateURL=https://s3.amazonaws.com/nfscan-cloudformation-templates/cloudformation.template)
+Asia Pacific (Seoul) | ap-northeast-2 | [![](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-northeast-2#/stacks/new?stackName=nfscan&templateURL=https://s3.amazonaws.com/nfscan-cloudformation-templates/cloudformation.template)
+Asia Pacific (Singapore) | ap-northeast-1 | [![](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-northeast-1#/stacks/new?stackName=nfscan&templateURL=https://s3.amazonaws.com/nfscan-cloudformation-templates/cloudformation.template)
+Asia Pacific (Sydney) | ap-southeast-2 | [![](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-2#/stacks/new?stackName=nfscan&templateURL=https://s3.amazonaws.com/nfscan-cloudformation-templates/cloudformation.template)
+Asia Pacific (Tokyo) | ap-southeast-1 | [![](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks/new?stackName=nfscan&templateURL=https://s3.amazonaws.com/nfscan-cloudformation-templates/cloudformation.template)
+EU (Frankfurt) | eu-central-1 | [![](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-central-1#/stacks/new?stackName=nfscan&templateURL=https://s3.amazonaws.com/nfscan-cloudformation-templates/cloudformation.template)
+EU (Ireland) | eu-west-1 | [![](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/new?stackName=nfscan&templateURL=https://s3.amazonaws.com/nfscan-cloudformation-templates/cloudformation.template)
+South America (São Paulo) | sa-east-1 | [![](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png)](https://console.aws.amazon.com/cloudformation/home?region=sa-east-1#/stacks/new?stackName=nfscan&templateURL=https://s3.amazonaws.com/nfscan-cloudformation-templates/cloudformation.template)
+
 
 ## Setting up development environment
 
