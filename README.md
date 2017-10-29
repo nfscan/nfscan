@@ -3,10 +3,6 @@
 
 NFScan is a free, open-source software, available to non-profit organizations to receive donations effectively.
 
-## FAQ
-
-Frequent asked questions in [Portuguese](http://nfscan.cc/faq.html)
-
 ## What's new in this version
 
 * Create Cloudformation templates to allow easy deploy by anyone with an AWS account.
