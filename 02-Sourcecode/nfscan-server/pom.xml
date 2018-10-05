@@ -76,9 +76,9 @@
     </developers>
 
     <properties>
-        <org.springframework.version>4.2.3.RELEASE</org.springframework.version>
-        <org.springframework.security.version>4.0.3.RELEASE</org.springframework.security.version>
-        <com.amazonaws.version>1.11.44</com.amazonaws.version>
+        <org.springframework.version>4.3.15.RELEASE</org.springframework.version>
+        <org.springframework.security.version>4.2.3.RELEASE</org.springframework.security.version>
+        <com.amazonaws.version>1.11.161</com.amazonaws.version>
         <configuration.source>1.7</configuration.source>
         <configuration.target>1.7</configuration.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -171,7 +171,7 @@
         <dependency>
             <groupId>commons-validator</groupId>
             <artifactId>commons-validator</artifactId>
-            <version>1.4.0</version>
+            <version>1.5.0</version>
         </dependency>
         <dependency>
             <groupId>commons-codec</groupId>
@@ -300,21 +300,15 @@
                         <configuration>
                             <tasks>
                                 <echo message=""/>
-                                <echo
-                                    message="============================================================"/>
+                                <echo message="============================================================"/>
                                 <echo message=""/>
                                 <echo message="Copiando PROFILE: ${target.env}"/>
                                 <echo message=""/>
-                                <echo
-                                    message="============================================================"/>
+                                <echo message="============================================================"/>
                                 <echo message=""/>
-                                <copy overwrite="true"
-                                      tofile="src/main/resources/application-env.properties"
-                                      file="resources/env-properties/application-env-${target.env}.properties"/>
-                                <copy overwrite="true" tofile="src/main/resources/log4j.properties"
-                                      file="resources/env-properties/log4j-${target.env}.properties"/>
-                                <copy overwrite="true" tofile="src/main/resources/application-prop.properties"
-                                      file="resources/env-properties/application-prop-${target.env}.properties"/>
+                                <copy overwrite="true" tofile="src/main/resources/application-env.properties" file="resources/env-properties/application-env-${target.env}.properties"/>
+                                <copy overwrite="true" tofile="src/main/resources/log4j.properties" file="resources/env-properties/log4j-${target.env}.properties"/>
+                                <copy overwrite="true" tofile="src/main/resources/application-prop.properties" file="resources/env-properties/application-prop-${target.env}.properties"/>
                             </tasks>
                         </configuration>
                         <goals>
