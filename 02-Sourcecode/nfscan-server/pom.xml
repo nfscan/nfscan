@@ -77,7 +77,7 @@
 
     <properties>
         <org.springframework.version>4.2.9.RELEASE</org.springframework.version>
-        <org.springframework.security.version>4.0.3.RELEASE</org.springframework.security.version>
+        <org.springframework.security.version>5.3.2.RELEASE</org.springframework.security.version>
         <com.amazonaws.version>1.11.44</com.amazonaws.version>
         <configuration.source>1.7</configuration.source>
         <configuration.target>1.7</configuration.target>
